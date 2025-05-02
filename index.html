@@ -5,7 +5,6 @@
   <title>Kampong Speu Pipe Network</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     body { margin: 0; padding: 0; }
@@ -22,7 +21,6 @@
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
-
     .legend i {
       width: 22px;
       height: 22px;
@@ -37,17 +35,26 @@
 
 <div id="map"></div>
 
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
   var map = L.map('map').setView([11.4, 104.5], 10);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  // 🗺️ Base Maps
+  var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
+    attribution: '© OpenStreetMap'
+  });
 
+  var esriSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/' +
+    'World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 19,
+    attribution: 'Tiles © Esri & contributors'
+  });
+
+  osm.addTo(map); // Default base map
+
+  // 🔧 Pipe Layers
   var existingLayer = L.geoJSON(null, {
     style: { color: 'black', weight: 2 },
     onEachFeature: function (feature, layer) {
@@ -78,6 +85,7 @@
     }
   });
 
+  // 🔄 Load GeoJSON
   fetch('KPS-20250502.geojson')
     .then(res => res.json())
     .then(data => {
@@ -85,14 +93,23 @@
       newLayer.addData(data.features.filter(f => !f.properties.diameter));
     });
 
+  // 🧭 Layer Control
+  var baseMaps = {
+    "Street Map": osm,
+    "Satellite (Esri)": esriSat
+  };
+
   var overlayMaps = {
     "Existing Pipe": existingLayer,
     "New Pipe": newLayer
   };
-  L.control.layers(null, overlayMaps).addTo(map);
+
+  L.control.layers(baseMaps, overlayMaps).addTo(map);
+
   existingLayer.addTo(map);
   newLayer.addTo(map);
 
+  // 📌 Legend
   var legend = L.control({ position: 'bottomright' });
   legend.onAdd = function () {
     var div = L.DomUtil.create('div', 'legend');
