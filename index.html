@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="km">
 <head>
   <meta charset="utf-8" />
-  <title>Kampong Speu Pipe Network</title>
+  <title>ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ដល់ឆ្នាំ២០៤០</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    body { margin: 0; padding: 0; }
+    body { margin: 0; padding: 0; font-family: "Khmer OS", "Noto Sans Khmer", sans-serif; }
     #map { height: 100vh; }
 
     .legend {
@@ -35,6 +36,7 @@
 
 <div id="map"></div>
 
+<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
@@ -52,9 +54,9 @@
     attribution: 'Tiles © Esri & contributors'
   });
 
-  osm.addTo(map); // Default base map
+  osm.addTo(map);
 
-  // 🔧 Pipe Layers
+  // Pipe Layers
   var existingLayer = L.geoJSON(null, {
     style: { color: 'black', weight: 2 },
     onEachFeature: function (feature, layer) {
@@ -85,7 +87,6 @@
     }
   });
 
-  // 🔄 Load GeoJSON
   fetch('KPS-20250502.geojson')
     .then(res => res.json())
     .then(data => {
@@ -93,7 +94,6 @@
       newLayer.addData(data.features.filter(f => !f.properties.diameter));
     });
 
-  // 🧭 Layer Control
   var baseMaps = {
     "Street Map": osm,
     "Satellite (Esri)": esriSat
@@ -105,16 +105,14 @@
   };
 
   L.control.layers(baseMaps, overlayMaps).addTo(map);
-
   existingLayer.addTo(map);
   newLayer.addTo(map);
 
-  // 📌 Legend
   var legend = L.control({ position: 'bottomright' });
   legend.onAdd = function () {
     var div = L.DomUtil.create('div', 'legend');
-    div.innerHTML += '<i style="background: black"></i> Existing Pipe<br>';
-    div.innerHTML += '<i style="background: white"></i> New Pipe';
+    div.innerHTML += '<i style="background: black"></i> បណ្តាញទុយោបច្ចុប្បន្ន<br>';
+    div.innerHTML += '<i style="background: white"></i> បណ្តាញទុយោពង្រីក ថ្ងៃអនាគត';
     return div;
   };
   legend.addTo(map);
