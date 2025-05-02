@@ -10,18 +10,25 @@
   <style>
     body { margin: 0; padding: 0; }
     #map { height: 100vh; }
+
     .legend {
+      position: absolute;
+      bottom: 20px;
+      right: 10px;
       background: white;
-      padding: 6px 10px;
-      line-height: 1.5em;
-      border-radius: 4px;
+      padding: 15px;
+      font-size: 16px;
+      line-height: 1.8em;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
     .legend i {
-      width: 18px;
-      height: 18px;
+      width: 22px;
+      height: 22px;
       float: left;
-      margin-right: 8px;
-      opacity: 0.9;
+      margin-right: 10px;
+      opacity: 1;
+      border: 1px solid #000;
     }
   </style>
 </head>
@@ -36,11 +43,10 @@
   var map = L.map('map').setView([11.4, 104.5], 10);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18,
+    maxZoom: 19,
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
-  // Layers
   var existingLayer = L.geoJSON(null, {
     style: { color: 'black', weight: 2 },
     onEachFeature: function (feature, layer) {
@@ -71,7 +77,6 @@
     }
   });
 
-  // Load and separate by type
   fetch('KPS-20250502.geojson')
     .then(res => res.json())
     .then(data => {
@@ -79,22 +84,19 @@
       newLayer.addData(data.features.filter(f => !f.properties.diameter));
     });
 
-  // Layer control with checkboxes
-  var overlays = {
-    "🖤 Existing Pipe": existingLayer,
-    "🤍 New Pipe": newLayer
+  var overlayMaps = {
+    "Existing Pipe": existingLayer,
+    "New Pipe": newLayer
   };
-  L.control.layers(null, overlays).addTo(map);
-
+  L.control.layers(null, overlayMaps).addTo(map);
   existingLayer.addTo(map);
   newLayer.addTo(map);
 
-  // Legend
   var legend = L.control({ position: 'bottomright' });
   legend.onAdd = function () {
     var div = L.DomUtil.create('div', 'legend');
-    div.innerHTML += "<i style='background: black'></i> Existing Pipe<br>";
-    div.innerHTML += "<i style='background: white; border: 1px solid black'></i> New Pipe";
+    div.innerHTML += '<i style="background: black"></i> Existing Pipe<br>';
+    div.innerHTML += '<i style="background: white"></i> New Pipe';
     return div;
   };
   legend.addTo(map);
