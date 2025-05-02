@@ -10,50 +10,94 @@
   <style>
     body { margin: 0; padding: 0; }
     #map { height: 100vh; }
-    h1 { position: absolute; top: 10px; left: 10px; background: white; padding: 5px 10px; z-index: 1000; }
+    .legend {
+      background: white;
+      padding: 6px 10px;
+      line-height: 1.5em;
+      border-radius: 4px;
+    }
+    .legend i {
+      width: 18px;
+      height: 18px;
+      float: left;
+      margin-right: 8px;
+      opacity: 0.9;
+    }
   </style>
 </head>
 <body>
 
-<h1>Kampong Speu Pipe Network</h1>
 <div id="map"></div>
 
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
-  // Initialize map
-  var map = L.map('map').setView([11.4, 104.5], 10); // Adjust center if needed
+  var map = L.map('map').setView([11.4, 104.5], 10);
 
-  // Add OpenStreetMap base layer
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
-  // Load your GeoJSON file
+  // Layers
+  var existingLayer = L.geoJSON(null, {
+    style: { color: 'black', weight: 2 },
+    onEachFeature: function (feature, layer) {
+      if (feature.properties.diameter) {
+        layer.bindPopup(`
+          <strong>Pipe Code:</strong> ${feature.properties.pipe_code || 'N/A'}<br>
+          <strong>Length:</strong> ${feature.properties.length || 'N/A'} m<br>
+          <strong>Diameter:</strong> ${feature.properties.diameter} mm<br>
+          <strong>Elevation:</strong> ${feature.properties.elevation || 'N/A'} m<br>
+          <strong>Village:</strong> ${feature.properties.village || 'N/A'}
+        `);
+      }
+    }
+  });
+
+  var newLayer = L.geoJSON(null, {
+    style: { color: 'white', weight: 2 },
+    onEachFeature: function (feature, layer) {
+      if (!feature.properties.diameter) {
+        layer.bindPopup(`
+          <strong>Pipe Code:</strong> ${feature.properties.pipe_code || 'N/A'}<br>
+          <strong>Length:</strong> ${feature.properties.length || 'N/A'} m<br>
+          <strong>Diameter:</strong> New Pipe<br>
+          <strong>Elevation:</strong> ${feature.properties.elevation || 'N/A'} m<br>
+          <strong>Village:</strong> ${feature.properties.village || 'N/A'}
+        `);
+      }
+    }
+  });
+
+  // Load and separate by type
   fetch('KPS-20250502.geojson')
     .then(res => res.json())
     .then(data => {
-      L.geoJSON(data, {
-        style: function(feature) {
-          return {
-            color: feature.properties.diameter ? 'black' : 'white',
-            weight: 2
-          };
-        },
-        onEachFeature: function (feature, layer) {
-          let popupContent = `
-            <strong>Pipe Code:</strong> ${feature.properties.pipe_code || 'N/A'}<br>
-            <strong>Length:</strong> ${feature.properties.length || 'N/A'} m<br>
-            <strong>Diameter:</strong> ${feature.properties.diameter || 'New'} mm<br>
-            <strong>Elevation:</strong> ${feature.properties.elevation || 'N/A'} m<br>
-            <strong>Village:</strong> ${feature.properties.village || 'N/A'}
-          `;
-          layer.bindPopup(popupContent);
-        }
-      }).addTo(map);
+      existingLayer.addData(data.features.filter(f => f.properties.diameter));
+      newLayer.addData(data.features.filter(f => !f.properties.diameter));
     });
+
+  // Layer control with checkboxes
+  var overlays = {
+    "🖤 Existing Pipe": existingLayer,
+    "🤍 New Pipe": newLayer
+  };
+  L.control.layers(null, overlays).addTo(map);
+
+  existingLayer.addTo(map);
+  newLayer.addTo(map);
+
+  // Legend
+  var legend = L.control({ position: 'bottomright' });
+  legend.onAdd = function () {
+    var div = L.DomUtil.create('div', 'legend');
+    div.innerHTML += "<i style='background: black'></i> Existing Pipe<br>";
+    div.innerHTML += "<i style='background: white; border: 1px solid black'></i> New Pipe";
+    return div;
+  };
+  legend.addTo(map);
 </script>
 
 </body>
