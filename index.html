@@ -4,43 +4,64 @@
   <meta charset="utf-8" />
   <title>ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ដល់ឆ្នាំ២០៤០</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    body { margin: 0; padding: 0; font-family: "Khmer OS", "Noto Sans Khmer", sans-serif; }
-    #map { height: 100vh; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Khmer OS", "Noto Sans Khmer", sans-serif;
+    }
+
+    #header {
+      background: #005cbf;
+      color: white;
+      padding: 16px 20px;
+      font-size: 22px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    #map {
+      height: calc(100vh - 64px);
+    }
 
     .legend {
       position: absolute;
       bottom: 20px;
       right: 10px;
       background: white;
-      padding: 20px;
+      padding: 20px 25px;
       font-size: 18px;
       line-height: 2em;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.3);
-      min-width: 300px;
-    }
-
-    .legend i {
-      width: 26px;
-      height: 26px;
-      float: left;
-      margin-right: 12px;
-      opacity: 1;
-      border: 1px solid #000;
+      min-width: 360px;
     }
 
     .legend .legend-item {
-      clear: both;
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .legend i {
+      width: 24px;
+      height: 24px;
+      margin-right: 12px;
+      display: inline-block;
+      border: 1px solid #000;
     }
   </style>
 </head>
 <body>
 
+<!-- 🏷️ Khmer Title Banner -->
+<div id="header">ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ដល់ឆ្នាំ២០៤០</div>
+
+<!-- 🗺️ Map Container -->
 <div id="map"></div>
 
+<!-- JS Dependencies -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
@@ -91,6 +112,7 @@
     }
   });
 
+  // 🔁 Load GeoJSON
   fetch('KPS-20250502.geojson')
     .then(res => res.json())
     .then(data => {
@@ -98,6 +120,7 @@
       newLayer.addData(data.features.filter(f => !f.properties.diameter));
     });
 
+  // 🧭 Layer Toggle
   var baseMaps = {
     "Street Map": osm,
     "Satellite (Esri)": esriSat
@@ -108,7 +131,7 @@
     "បណ្តាញទុយោពង្រីក ថ្ងៃអនាគត": newLayer
   };
 
-  var control = L.control.layers(baseMaps, overlayMaps).addTo(map);
+  L.control.layers(baseMaps, overlayMaps).addTo(map);
   existingLayer.addTo(map);
   newLayer.addTo(map);
 
@@ -128,12 +151,12 @@
   };
   legend.addTo(map);
 
-  // 🔄 Sync Legend with Layer Visibility
+  // 🔄 Sync legend with visibility
   map.on('overlayadd', function (e) {
     if (e.name === "បណ្តាញទុយោបច្ចុប្បន្ន") {
-      document.getElementById('legend-existing').style.display = 'block';
+      document.getElementById('legend-existing').style.display = 'flex';
     } else if (e.name === "បណ្តាញទុយោពង្រីក ថ្ងៃអនាគត") {
-      document.getElementById('legend-new').style.display = 'block';
+      document.getElementById('legend-new').style.display = 'flex';
     }
   });
 
