@@ -6,9 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    body { margin: 0; padding: 0; font-family: "Khmer OS", "Noto Sans Khmer", sans-serif; }
-    #header { background: #005cbf; color: white; padding: 16px 20px; font-size: 22px; font-weight: bold; text-align: center; }
-    #map { height: calc(100vh - 64px); }
+    body { margin:0; padding:0; font-family:"Khmer OS","Noto Sans Khmer",sans-serif; }
+    #header { background:#005cbf; color:white; padding:16px 20px; font-size:22px; font-weight:bold; text-align:center; }
+    #map { height:calc(100vh - 64px); }
+    .legend { position:absolute; bottom:20px; right:10px; background:white; padding:20px 25px; font-size:18px; line-height:2em; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.3); min-width:360px; }
+    .legend .legend-item { display:flex; align-items:center; margin-bottom:10px; }
+    .legend i { width:24px; height:24px; margin-right:12px; display:inline-block; border:1px solid #000; }
+    .legend i.circle { border-radius:50%; }
   </style>
 </head>
 <body>
@@ -16,47 +20,95 @@
   <div id="map"></div>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    // --- Initialize Map ---
+    // Initialize map
     var map = L.map('map').setView([11.4, 104.5], 10);
     var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
     var esriSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles © Esri & contributors' });
     var baseMaps = { "Street Map": osm, "Satellite (Esri)": esriSat };
 
-    // --- Layer Groups for WS and WTP ---
+    // Pipeline layers
+    var existingLayer = L.geoJSON(null, {
+      style: { color: 'black', weight: 2 },
+      onEachFeature: function(feature, layer) {
+        layer.bindPopup(
+          '<strong>Pipe Code:</strong> ' + (feature.properties.pipe_code || 'N/A') + '<br>' +
+          '<strong>Length:</strong> ' + (feature.properties.length || 'N/A') + ' m<br>' +
+          '<strong>Diameter:</strong> ' + feature.properties.diameter + ' mm<br>' +
+          '<strong>Elevation:</strong> ' + (feature.properties.elevation || 'N/A') + ' m<br>' +
+          '<strong>Village:</strong> ' + (feature.properties.village || 'N/A')
+        );
+      }
+    });
+    var newLayer = L.geoJSON(null, {
+      style: { color: 'white', weight: 2 },
+      onEachFeature: function(feature, layer) {
+        layer.bindPopup(
+          '<strong>Pipe Code:</strong> ' + (feature.properties.pipe_code || 'N/A') + '<br>' +
+          '<strong>Length:</strong> ' + (feature.properties.length || 'N/A') + ' m<br>' +
+          '<strong>Diameter:</strong> New Pipe<br>' +
+          '<strong>Elevation:</strong> ' + (feature.properties.elevation || 'N/A') + ' m<br>' +
+          '<strong>Village:</strong> ' + (feature.properties.village || 'N/A')
+        );
+      }
+    });
+
+    // WS and WTP layers
     var wsLayer = L.geoJSON(null, {
       pointToLayer: function(feature, latlng) {
         return L.circleMarker(latlng, { radius: 6, fillColor: '#3498db', color: '#2980b9', weight: 1, fillOpacity: 0.8 });
       },
-      style: function(feature) { return { color: '#3498db', weight: 2 }; },
+      style: function() { return { color: '#3498db', weight: 2 }; },
       onEachFeature: function(feature, layer) {
+        var props = feature.properties || {};
         var popup = '<table>';
-        for (var key in feature.properties) popup += '<tr><th>'+key+'</th><td>'+feature.properties[key]+'</td></tr>';
+        for (var key in props) { popup += '<tr><th>' + key + '</th><td>' + props[key] + '</td></tr>'; }
         popup += '</table>';
         layer.bindPopup(popup);
       }
-    }).addTo(map);
-
+    });
     var wtpLayer = L.geoJSON(null, {
       pointToLayer: function(feature, latlng) {
         return L.circleMarker(latlng, { radius: 6, fillColor: '#f1c40f', color: '#d4ac0d', weight: 1, fillOpacity: 0.8 });
       },
-      style: function(feature) { return { color: '#f1c40f', weight: 2 }; },
+      style: function() { return { color: '#f1c40f', weight: 2 }; },
       onEachFeature: function(feature, layer) {
+        var props = feature.properties || {};
         var popup = '<table>';
-        for (var key in feature.properties) popup += '<tr><th>'+key+'</th><td>'+feature.properties[key]+'</td></tr>';
+        for (var key in props) { popup += '<tr><th>' + key + '</th><td>' + props[key] + '</td></tr>'; }
         popup += '</table>';
         layer.bindPopup(popup);
       }
-    }).addTo(map);
+    });
 
-    // --- Layer Control ---
+    // Layer control
     var overlays = {
+      'បណ្តាញទុយោបច្ចុប្បន្ន': existingLayer,
+      'បណ្តាញទុយោពង្រីក ថ្ងៃអនាគត': newLayer,
       'Water Sources (WS)': wsLayer,
       'Water Treatment Plants (WTP)': wtpLayer
     };
     L.control.layers(baseMaps, overlays).addTo(map);
 
-    // --- GitHub Repo Info (replace with your own or use autodetect) ---
+    // Add all layers by default
+    existingLayer.addTo(map);
+    newLayer.addTo(map);
+    wsLayer.addTo(map);
+    wtpLayer.addTo(map);
+
+    // Legend
+    var legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function() {
+      var div = L.DomUtil.create('div', 'legend');
+      div.innerHTML =
+        '<div class="legend-item"><i style="background:black"></i> បណ្តាញទុយោបច្ចុប្បន្ន</div>' +
+        '<div class="legend-item"><i style="background:white;"></i> បណ្តាញទុយោពង្រីក ថ្ងៃអនាគត</div>' +
+        '<div class="legend-item"><i class="circle" style="background:#3498db"></i> ស្ថានីយ (WS)</div>' +
+        '<div class="legend-item"><i class="circle" style="background:#f1c40f"></i> ស្ថានីយ (WTP)</div>';
+      return div;
+    };
+    legend.addTo(map);
+
+    // GitHub repo info
     var githubUser = 'YOUR_USERNAME';
     var githubRepo = 'YOUR_REPO';
     var githubBranch = 'main';
@@ -66,28 +118,37 @@
       if (parts.length) githubRepo = parts[0];
     }
 
-    // --- Fetch and Classify GeoJSON/JSON from Repo Root ---
+    // Fetch files from GitHub repo root
     var apiUrl = `https://api.github.com/repos/${githubUser}/${githubRepo}/contents?ref=${githubBranch}`;
     fetch(apiUrl)
       .then(res => res.json())
       .then(files => {
-        files.filter(f => f.type==='file' && /\.(geojson?|json)$/i.test(f.name))
-             .forEach(file => {
-               var rawUrl = `https://raw.githubusercontent.com/${githubUser}/${githubRepo}/${githubBranch}/${file.name}`;
-               fetch(rawUrl)
-                 .then(r => r.json())
-                 .then(data => {
-                   data.features.forEach(function(feat) {
-                     var nameVal = feat.properties && feat.properties.name;
-                     if (nameVal && nameVal.includes('WS')) {
-                       wsLayer.addData(feat);
-                     } else if (nameVal && nameVal.includes('WTP')) {
-                       wtpLayer.addData(feat);
-                     }
-                   });
-                 })
-                 .catch(err => console.error('Error loading', file.name, err));
-             });
+        files.filter(f => f.type === 'file' && /\.(geojson?|json)$/i.test(f.name))
+          .forEach(file => {
+            var rawUrl = `https://raw.githubusercontent.com/${githubUser}/${githubRepo}/${githubBranch}/${file.name}`;
+            fetch(rawUrl)
+              .then(r => r.json())
+              .then(data => {
+                (data.features || []).forEach(feat => {
+                  var geom = feat.geometry && feat.geometry.type;
+                  if (geom && geom.includes('Line')) {
+                    if (feat.properties && feat.properties.diameter) {
+                      existingLayer.addData(feat);
+                    } else {
+                      newLayer.addData(feat);
+                    }
+                  } else if (geom === 'Point') {
+                    var name = feat.properties && feat.properties.name || '';
+                    if (name.includes('WS')) {
+                      wsLayer.addData(feat);
+                    } else if (name.includes('WTP')) {
+                      wtpLayer.addData(feat);
+                    }
+                  }
+                });
+              })
+              .catch(err => console.error('Error loading', file.name, err));
+          });
       })
       .catch(err => console.error('Error listing repository contents:', err));
   </script>
