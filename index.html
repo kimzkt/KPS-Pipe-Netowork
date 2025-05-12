@@ -11,7 +11,6 @@
       padding: 0;
       font-family: "Khmer OS", "Noto Sans Khmer", sans-serif;
     }
-
     #header {
       background: #005cbf;
       color: white;
@@ -20,188 +19,104 @@
       font-weight: bold;
       text-align: center;
     }
-
     #map {
       height: calc(100vh - 64px);
     }
-
-    .legend {
+    /* File input styling */
+    #file-input {
       position: absolute;
-      bottom: 20px;
-      right: 10px;
+      top: 64px;
+      left: 10px;
+      z-index: 1000;
       background: white;
-      padding: 20px 25px;
-      font-size: 18px;
-      line-height: 2em;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-      min-width: 360px;
-    }
-
-    .legend .legend-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .legend i {
-      width: 24px;
-      height: 24px;
-      margin-right: 12px;
-      display: inline-block;
-      border: 1px solid #000;
+      padding: 5px;
+      border-radius: 4px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
     }
   </style>
 </head>
 <body>
 
-<!-- 🏷️ Khmer Title Banner -->
-<div id="header">ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ដល់ឆ្នាំ២០៤០</div>
+  <!-- 🏷️ Khmer Title Banner -->
+  <div id="header">ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ដល់ឆ្នាំ២០៤០</div>
 
-<!-- 🗺️ Map Container -->
-<div id="map"></div>
+  <!-- 📂 File Input for GeoJSON/JSON -->
+  <input type="file" id="file-input" multiple accept=".geojson,.json" />
 
-<!-- JS Dependencies -->
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- 🗺️ Map Container -->
+  <div id="map"></div>
 
-<script>
-  var map = L.map('map').setView([11.4, 104.5], 10);
+  <!-- JS Dependencies -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-  // 🗺️ Base Maps
-  var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap'
-  });
+  <script>
+    // Initialize map
+    var map = L.map('map').setView([11.4, 104.5], 10);
 
-  var esriSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/' +
-    'World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 19,
-    attribution: 'Tiles © Esri & contributors'
-  });
+    // Base maps
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
 
-  osm.addTo(map);
+    var esriSat = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      { maxZoom: 19, attribution: 'Tiles © Esri & contributors' }
+    );
 
-  // 🔧 Pipe Layers
-  var existingLayer = L.geoJSON(null, {
-    style: { color: 'black', weight: 2 },
-    onEachFeature: function (feature, layer) {
-      if (feature.properties.diameter) {
-        layer.bindPopup(
-          `<strong>Pipe Code:</strong> ${feature.properties.pipe_code || 'N/A'}<br>
-           <strong>Length:</strong> ${feature.properties.length || 'N/A'} m<br>
-           <strong>Diameter:</strong> ${feature.properties.diameter} mm<br>
-           <strong>Elevation:</strong> ${feature.properties.elevation || 'N/A'} m<br>
-           <strong>Village:</strong> ${feature.properties.village || 'N/A'}`
-        );
-      }
-    }
-  });
+    // Control layers container
+    var baseMaps = {
+      "Street Map": osm,
+      "Satellite (Esri)": esriSat
+    };
+    var overlays = {};
+    var controlLayers = L.control.layers(baseMaps, overlays).addTo(map);
 
-  var newLayer = L.geoJSON(null, {
-    style: { color: 'white', weight: 2 },
-    onEachFeature: function (feature, layer) {
-      if (!feature.properties.diameter) {
-        layer.bindPopup(
-          `<strong>Pipe Code:</strong> ${feature.properties.pipe_code || 'N/A'}<br>
-           <strong>Length:</strong> ${feature.properties.length || 'N/A'} m<br>
-           <strong>Diameter:</strong> New Pipe<br>
-           <strong>Elevation:</strong> ${feature.properties.elevation || 'N/A'} m<br>
-           <strong>Village:</strong> ${feature.properties.village || 'N/A'}`
-        );
-      }
-    }
-  });
+    // File loader for any GeoJSON/JSON
+    document.getElementById('file-input').addEventListener('change', function(e) {
+      var files = e.target.files;
+      Array.from(files).forEach(function(file) {
+        var reader = new FileReader();
+        reader.onload = function(evt) {
+          try {
+            var data = JSON.parse(evt.target.result);
+            var layerName = file.name;
+            var fileLayer = L.geoJSON(data, {
+              pointToLayer: function(feature, latlng) {
+                return L.circleMarker(latlng, {
+                  radius: 6,
+                  fillColor: '#3498db',
+                  color: '#2980b9',
+                  weight: 1,
+                  opacity: 1,
+                  fillOpacity: 0.8
+                });
+              },
+              style: function(feature) {
+                return { color: '#27ae60', weight: 2 };
+              },
+              onEachFeature: function(feature, layer) {
+                var props = feature.properties || {};
+                var popup = '<table>';
+                for (var key in props) {
+                  popup += '<tr><th>' + key + '</th><td>' + props[key] + '</td></tr>';
+                }
+                popup += '</table>';
+                layer.bindPopup(popup);
+              }
+            }).addTo(map);
 
-  // 📍 Point Data Layer
-  var pointLayer = L.geoJSON(null, {
-    pointToLayer: function(feature, latlng) {
-      return L.circleMarker(latlng, {
-        radius: 8,
-        fillColor: '#e74c3c',
-        color: '#c0392b',
-        weight: 1,
-        opacity: 1,
-        fillOpacity: 0.9
+            // Add to layer control
+            controlLayers.addOverlay(fileLayer, layerName);
+          } catch (err) {
+            console.error('Invalid JSON in file', file.name, err);
+            alert('Error parsing ' + file.name + ': ' + err.message);
+          }
+        };
+        reader.readAsText(file);
       });
-    },
-    onEachFeature: function(feature, layer) {
-      layer.bindPopup(
-        `<strong>Station:</strong> ${feature.properties.station || 'N/A'}<br>
-         <strong>ID:</strong> ${feature.properties.id || 'N/A'}`
-      );
-    }
-  });
-
-  // 🔁 Load GeoJSONs
-  fetch('KPS-20250502.geojson')
-    .then(res => res.json())
-    .then(data => {
-      existingLayer.addData(data.features.filter(f => f.properties.diameter));
-      newLayer.addData(data.features.filter(f => !f.properties.diameter));
     });
-
-  // Load the processed point file
-  fetch('processed_points.geojson')
-    .then(res => res.json())
-    .then(data => pointLayer.addData(data));
-
-  // 🧭 Layer Toggle Controls
-  var baseMaps = {
-    "Street Map": osm,
-    "Satellite (Esri)": esriSat
-  };
-
-  var overlayMaps = {
-    "បណ្តាញទុយោបច្ចុប្បន្ន": existingLayer,
-    "បណ្តាញទុយោពង្រីក ថ្ងៃអនាគត": newLayer,
-    "ស្ថានីយ": pointLayer
-  };
-
-  L.control.layers(baseMaps, overlayMaps).addTo(map);
-  existingLayer.addTo(map);
-  newLayer.addTo(map);
-  pointLayer.addTo(map);
-
-  // 📌 Legend
-  var legend = L.control({ position: 'bottomright' });
-  legend.onAdd = function () {
-    var div = L.DomUtil.create('div', 'legend');
-    div.innerHTML = `
-      <div class="legend-item" id="legend-existing">
-        <i style="background: black"></i> បណ្តាញទុយោបច្ចុប្បន្ន
-      </div>
-      <div class="legend-item" id="legend-new">
-        <i style="background: white"></i> បណ្តាញទុយោពង្រីក ថ្ងៃអនាគត
-      </div>
-      <div class="legend-item" id="legend-points">
-        <i style="background: #e74c3c; border-radius:50%;"></i> ស្ថានីយ
-      </div>
-    `;
-    return div;
-  };
-  legend.addTo(map);
-
-  // 🔄 Sync legend with visibility
-  map.on('overlayadd', function (e) {
-    if (e.name === "បណ្តាញទុយោបច្ចុប្បន្ន") {
-      document.getElementById('legend-existing').style.display = 'flex';
-    } else if (e.name === "បណ្តាញទុយោពង្រីក ថ្ងៃអនាគត") {
-      document.getElementById('legend-new').style.display = 'flex';
-    } else if (e.name === "ស្ថានីយ") {
-      document.getElementById('legend-points').style.display = 'flex';
-    }
-  });
-
-  map.on('overlayremove', function (e) {
-    if (e.name === "បណ្តាញទុយោបច្ចុប្បន្ន") {
-      document.getElementById('legend-existing').style.display = 'none';
-    } else if (e.name === "បណ្តាញទុយោពង្រីក ថ្ងៃអនាគត") {
-      document.getElementById('legend-new').style.display = 'none';
-    } else if (e.name === "ស្ថានីយ") {
-      document.getElementById('legend-points').style.display = 'none';
-    }
-  });
-</script>
+  </script>
 
 </body>
 </html>
