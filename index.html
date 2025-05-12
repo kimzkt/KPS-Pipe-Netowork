@@ -6,117 +6,71 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: "Khmer OS", "Noto Sans Khmer", sans-serif;
-    }
-    #header {
-      background: #005cbf;
-      color: white;
-      padding: 16px 20px;
-      font-size: 22px;
-      font-weight: bold;
-      text-align: center;
-    }
-    #map {
-      height: calc(100vh - 64px);
-    }
-    /* File input styling */
-    #file-input {
-      position: absolute;
-      top: 64px;
-      left: 10px;
-      z-index: 1000;
-      background: white;
-      padding: 5px;
-      border-radius: 4px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.3);
-    }
+    body { margin: 0; padding: 0; font-family: "Khmer OS", "Noto Sans Khmer", sans-serif; }
+    #header { background: #005cbf; color: white; padding: 16px 20px; font-size: 22px; font-weight: bold; text-align: center; }
+    #map { height: calc(100vh - 64px); }
   </style>
 </head>
 <body>
-
-  <!-- 🏷️ Khmer Title Banner -->
   <div id="header">ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ដល់ឆ្នាំ២០៤០</div>
-
-  <!-- 📂 File Input for GeoJSON/JSON -->
-  <input type="file" id="file-input" multiple accept=".geojson,.json" />
-
-  <!-- 🗺️ Map Container -->
   <div id="map"></div>
-
-  <!-- JS Dependencies -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
   <script>
-    // Initialize map
+    // --- Map Initialization ---
     var map = L.map('map').setView([11.4, 104.5], 10);
-
-    // Base maps
-    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
-
-    var esriSat = L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      { maxZoom: 19, attribution: 'Tiles © Esri & contributors' }
-    );
-
-    // Control layers container
-    var baseMaps = {
-      "Street Map": osm,
-      "Satellite (Esri)": esriSat
-    };
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+    var esriSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles © Esri & contributors' });
+    var baseMaps = { "Street Map": osm, "Satellite (Esri)": esriSat };
     var overlays = {};
     var controlLayers = L.control.layers(baseMaps, overlays).addTo(map);
 
-    // File loader for any GeoJSON/JSON
-    document.getElementById('file-input').addEventListener('change', function(e) {
-      var files = e.target.files;
-      Array.from(files).forEach(function(file) {
-        var reader = new FileReader();
-        reader.onload = function(evt) {
-          try {
-            var data = JSON.parse(evt.target.result);
-            var layerName = file.name;
-            var fileLayer = L.geoJSON(data, {
-              pointToLayer: function(feature, latlng) {
-                return L.circleMarker(latlng, {
-                  radius: 6,
-                  fillColor: '#3498db',
-                  color: '#2980b9',
-                  weight: 1,
-                  opacity: 1,
-                  fillOpacity: 0.8
-                });
-              },
-              style: function(feature) {
-                return { color: '#27ae60', weight: 2 };
-              },
-              onEachFeature: function(feature, layer) {
-                var props = feature.properties || {};
-                var popup = '<table>';
-                for (var key in props) {
-                  popup += '<tr><th>' + key + '</th><td>' + props[key] + '</td></tr>';
-                }
-                popup += '</table>';
-                layer.bindPopup(popup);
-              }
-            }).addTo(map);
+    // --- GitHub Repo Configuration ---
+    // Replace these with your GitHub username and repo name if autodetect fails
+    var githubUser = 'YOUR_USERNAME';
+    var githubRepo = 'YOUR_REPO';
+    var githubBranch = 'main';
 
-            // Add to layer control
-            controlLayers.addOverlay(fileLayer, layerName);
-          } catch (err) {
-            console.error('Invalid JSON in file', file.name, err);
-            alert('Error parsing ' + file.name + ': ' + err.message);
-          }
-        };
-        reader.readAsText(file);
-      });
-    });
+    // Attempt to autodetect user/repo from Pages URL
+    if (githubUser === 'YOUR_USERNAME') {
+      githubUser = window.location.host.split('.')[0];
+    }
+    if (githubRepo === 'YOUR_REPO') {
+      var parts = window.location.pathname.split('/').filter(Boolean);
+      if (parts.length) githubRepo = parts[0];
+    }
+
+    // --- Load all JSON/GeoJSON from repo root ---
+    var apiUrl = `https://api.github.com/repos/${githubUser}/${githubRepo}/contents?ref=${githubBranch}`;
+    fetch(apiUrl)
+      .then(res => res.json())
+      .then(files => {
+        files.filter(f => f.type === 'file' && /\.geojson?$|\.json$/i.test(f.name))
+             .forEach(file => {
+               var rawUrl = `https://raw.githubusercontent.com/${githubUser}/${githubRepo}/${githubBranch}/${file.name}`;
+               fetch(rawUrl)
+                 .then(r => r.json())
+                 .then(data => {
+                   var layer = L.geoJSON(data, {
+                     pointToLayer: function(feature, latlng) {
+                       return L.circleMarker(latlng, { radius: 6, fillColor: '#3498db', color: '#2980b9', weight: 1, fillOpacity: 0.8 });
+                     },
+                     style: function(feature) {
+                       return { color: '#27ae60', weight: 2 };
+                     },
+                     onEachFeature: function(feature, layer) {
+                       var props = feature.properties || {};
+                       var popup = '<table>';
+                       for (var key in props) popup += `<tr><th>${key}</th><td>${props[key]}</td></tr>`;
+                       popup += '</table>';
+                       layer.bindPopup(popup);
+                     }
+                   }).addTo(map);
+                   controlLayers.addOverlay(layer, file.name);
+                 })
+                 .catch(err => console.error('Failed loading', file.name, err));
+             });
+      })
+      .catch(err => console.error('Error listing repo contents:', err));
   </script>
-
 </body>
 </html>
