@@ -112,7 +112,7 @@
       }
     }).addTo(map);
 
-    // Sidebar layer list
+    // Sidebar layer toggles
     var overlays = {
       'បណ្តាញទុយោបច្ចុប្បន្ន': existingLayer,
       'បណ្តាញទុយោពង្រីក៖ ថ្ងៃអនាគត': newLayer,
@@ -129,25 +129,39 @@
       layerList.appendChild(div);
     });
 
-    // GitHub loader
+    // GitHub loader with feature fallback
     var githubUser='YOUR_USERNAME', githubRepo='YOUR_REPO', githubBranch='main';
     if(githubUser==='YOUR_USERNAME') githubUser=window.location.host.split('.')[0];
     if(githubRepo==='YOUR_REPO'){ var parts=window.location.pathname.split('/').filter(Boolean); if(parts.length) githubRepo=parts[0]; }
     fetch(`https://api.github.com/repos/${githubUser}/${githubRepo}/contents?ref=${githubBranch}`)
       .then(res=>res.json())
-      .then(files=> files.filter(f=>f.type==='file'&&/\.(geojson?|json)$/i.test(f.name))
-        .forEach(f=> fetch(`https://raw.githubusercontent.com/${githubUser}/${githubRepo}/${githubBranch}/${f.name}`)
-          .then(r=>r.json()).then(data=>{
-            data.features.forEach(feat=>{
-              var t=feat.geometry.type;
-              if(t.includes('Line')){ feat.properties.diameter ? existingLayer.addData(feat) : newLayer.addData(feat); }
-              else if(t==='Point'){ var n=feat.properties.name||''; n.includes('WS') ? wsLayer.addData(feat) : n.includes('WTP') ? wtpLayer.addData(feat) : null; }
-            });
-          }).catch(e=>console.error('load error',f.name,e))
-        )
-      ).catch(e=>console.error('repo list error',e));
+      .then(files=>{ files.filter(f=>f.type==='file'&&/\.(geojson?|json)$/i.test(f.name)).forEach(f=>{
+        var raw=`https://raw.githubusercontent.com/${githubUser}/${githubRepo}/${githubBranch}/${f.name}`;
+        fetch(raw).then(r=>r.json()).then(data=>{
+          // Determine features array
+          var features = [];
+          if(data.type==='FeatureCollection' && Array.isArray(data.features)) features = data.features;
+          else if(Array.isArray(data)) features = data;
+          else for(var k in data) if(Array.isArray(data[k])){ features = data[k]; break; }
+          // Add each feature
+          features.forEach(function(feat){
+            var geom = feat.geometry && feat.geometry.type;
+            // Lines = pipes
+            if(geom && geom.includes('Line')){
+              feat.properties && feat.properties.diameter ? existingLayer.addData(feat) : newLayer.addData(feat);
+            }
+            // Points = stations
+            else if(geom==='Point'){
+              var name = feat.properties && feat.properties.name || '';
+              if(name.includes('WS')) wsLayer.addData(feat);
+              else if(name.includes('WTP')) wtpLayer.addData(feat);
+            }
+          });
+        }).catch(e=>console.error('Error loading',f.name,e));
+      }); })
+      .catch(e=>console.error('Error listing repo contents:',e));
 
-    // Search
+    // Search control
     var allPoints = L.featureGroup([wsLayer, wtpLayer]);
     var searchControl = new L.Control.Search({ layer: allPoints, propertyName:'name', marker:false, moveToLocation:function(latlng){ map.setView(latlng,14); } });
     map.addControl(searchControl);
