@@ -4,153 +4,126 @@
   <meta charset="utf-8" />
   <title>ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ដល់ឆ្នាំ២០៤០</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <!-- Sidebar CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-sidebar-v2/css/leaflet-sidebar.min.css" />
+  <!-- Search CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-search/dist/leaflet-search.min.css" />
+
   <style>
     body { margin:0; padding:0; font-family:"Khmer OS","Noto Sans Khmer",sans-serif; }
-    #header { background:#005cbf; color:white; padding:16px 20px; font-size:22px; font-weight:bold; text-align:center; }
-    #map { height:calc(100vh - 64px); }
-    .legend { position:absolute; bottom:20px; right:10px; background:white; padding:20px 25px; font-size:18px; line-height:2em; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.3); min-width:360px; }
-    .legend .legend-item { display:flex; align-items:center; margin-bottom:10px; }
-    .legend i { width:24px; height:24px; margin-right:12px; display:inline-block; border:1px solid #000; }
-    .legend i.circle { border-radius:50%; }
+    #header { background:#005cbf; color:white; padding:16px; text-align:center; font-size:22px; font-weight:bold; }
+    #map { position:absolute; top:64px; bottom:0; right:0; left:0; }
+    /* Sidebar overrides */
+    .leaflet-sidebar-content { padding:10px; }
+    .layer-checkbox { margin:6px 0; }
   </style>
 </head>
 <body>
-  <div id="header">ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ដល់ឆ្នាំ២០៤០</div>
+
+  <div id="header">ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ ដល់ ឆ្នាំ២០២៤០</div>
+
+  <!-- Sidebar container -->
+  <div id="sidebar" class="leaflet-sidebar collapsed">
+    <!-- Nav tabs -->
+    <div class="leaflet-sidebar-tabs">
+      <ul role="tablist">
+        <li><a href="#layers" role="tab"><i class="fa fa-list"></i></a></li>
+        <li><a href="#searchpane" role="tab"><i class="fa fa-search"></i></a></li>
+      </ul>
+    </div>
+    <!-- Tab panes -->
+    <div class="leaflet-sidebar-content">
+      <div class="leaflet-sidebar-pane" id="layers">
+        <h1 class="leaflet-sidebar-header">ស្រទាប់បង្ហាញ<button class="leaflet-sidebar-close"><i class="fa fa-chevron-right"></i></button></h1>
+        <div id="layer-list"></div>
+      </div>
+      <div class="leaflet-sidebar-pane" id="searchpane">
+        <h1 class="leaflet-sidebar-header">ស្វែងរក<button class="leaflet-sidebar-close"><i class="fa fa-chevron-right"></i></button></h1>
+        <div id="search-control"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="map"></div>
+
+  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Sidebar JS -->
+  <script src="https://unpkg.com/leaflet-sidebar-v2/js/leaflet-sidebar.min.js"></script>
+  <!-- Search JS -->
+  <script src="https://unpkg.com/leaflet-search/dist/leaflet-search.min.js"></script>
+  <!-- FontAwesome for icons (optional) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
   <script>
     // Initialize map
     var map = L.map('map').setView([11.4, 104.5], 10);
-    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
-    var esriSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles © Esri & contributors' });
-    var baseMaps = { "Street Map": osm, "Satellite (Esri)": esriSat };
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'© OSM' }).addTo(map);
+    var esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom:19, attribution:'© Esri' });
+    L.control.layers({ 'Street': osm, 'Satellite': esri }).addTo(map);
 
-    // Pipeline layers
-    var existingLayer = L.geoJSON(null, {
-      style: { color: 'black', weight: 2 },
-      onEachFeature: function(feature, layer) {
-        layer.bindPopup(
-          '<strong>Pipe Code:</strong> ' + (feature.properties.pipe_code || 'N/A') + '<br>' +
-          '<strong>Length:</strong> ' + (feature.properties.length || 'N/A') + ' m<br>' +
-          '<strong>Diameter:</strong> ' + feature.properties.diameter + ' mm<br>' +
-          '<strong>Elevation:</strong> ' + (feature.properties.elevation || 'N/A') + ' m<br>' +
-          '<strong>Village:</strong> ' + (feature.properties.village || 'N/A')
-        );
-      }
-    });
-    var newLayer = L.geoJSON(null, {
-      style: { color: 'white', weight: 2 },
-      onEachFeature: function(feature, layer) {
-        layer.bindPopup(
-          '<strong>Pipe Code:</strong> ' + (feature.properties.pipe_code || 'N/A') + '<br>' +
-          '<strong>Length:</strong> ' + (feature.properties.length || 'N/A') + ' m<br>' +
-          '<strong>Diameter:</strong> New Pipe<br>' +
-          '<strong>Elevation:</strong> ' + (feature.properties.elevation || 'N/A') + ' m<br>' +
-          '<strong>Village:</strong> ' + (feature.properties.village || 'N/A')
-        );
-      }
-    });
+    // Create sidebar
+    var sidebar = L.control.sidebar({ container:'sidebar', autopan:true }).addTo(map);
+    sidebar.open('layers');
 
-    // WS and WTP layers
-    var wsLayer = L.geoJSON(null, {
-      pointToLayer: function(feature, latlng) {
-        return L.circleMarker(latlng, { radius: 6, fillColor: '#3498db', color: '#2980b9', weight: 1, fillOpacity: 0.8 });
-      },
-      style: function() { return { color: '#3498db', weight: 2 }; },
-      onEachFeature: function(feature, layer) {
-        var props = feature.properties || {};
-        var popup = '<table>';
-        for (var key in props) { popup += '<tr><th>' + key + '</th><td>' + props[key] + '</td></tr>'; }
-        popup += '</table>';
-        layer.bindPopup(popup);
-      }
-    });
-    var wtpLayer = L.geoJSON(null, {
-      pointToLayer: function(feature, latlng) {
-        return L.circleMarker(latlng, { radius: 6, fillColor: '#f1c40f', color: '#d4ac0d', weight: 1, fillOpacity: 0.8 });
-      },
-      style: function() { return { color: '#f1c40f', weight: 2 }; },
-      onEachFeature: function(feature, layer) {
-        var props = feature.properties || {};
-        var popup = '<table>';
-        for (var key in props) { popup += '<tr><th>' + key + '</th><td>' + props[key] + '</td></tr>'; }
-        popup += '</table>';
-        layer.bindPopup(popup);
-      }
-    });
+    // Prepare LayerGroups
+    var existingLayer = L.geoJSON(null, { style:{color:'black',weight:2} });
+    var newLayer      = L.geoJSON(null, { style:{color:'white',weight:2} });
+    var wsLayer       = L.geoJSON(null, { pointToLayer:function(f,latlng){return L.circleMarker(latlng,{radius:6,fillColor:'#3498db',color:'#2980b9',weight:1,fillOpacity:0.8});} });
+    var wtpLayer      = L.geoJSON(null, { pointToLayer:function(f,latlng){return L.circleMarker(latlng,{radius:6,fillColor:'#f1c40f',color:'#d4ac0d',weight:1,fillOpacity:0.8});} });
 
-    // Layer control
+    // Add to map by default
+    existingLayer.addTo(map); newLayer.addTo(map); wsLayer.addTo(map); wtpLayer.addTo(map);
+
+    // Populate sidebar layer list
     var overlays = {
       'បណ្តាញទុយោបច្ចុប្បន្ន': existingLayer,
-      'បណ្តាញទុយោពង្រីក ថ្ងៃអនាគត': newLayer,
-      'Water Sources (WS)': wsLayer,
-      'Water Treatment Plants (WTP)': wtpLayer
+      'បណ្តាញទុយោពង្រីក៖ ថ្ងៃអនាគត': newLayer,
+      'ស្ថានីយ WS': wsLayer,
+      'ស្ថានីយ WTP': wtpLayer
     };
-    L.control.layers(baseMaps, overlays).addTo(map);
+    var layerList = document.getElementById('layer-list');
+    Object.keys(overlays).forEach(function(name){
+      var container = document.createElement('div'); container.className='layer-checkbox';
+      var input = document.createElement('input'); input.type='checkbox'; input.checked=true; input.id=name;
+      input.onchange = function(){ if(this.checked) map.addLayer(overlays[name]); else map.removeLayer(overlays[name]); };
+      var label = document.createElement('label'); label.htmlFor=name; label.innerText=name;
+      container.appendChild(input); container.appendChild(label);
+      layerList.appendChild(container);
+    });
 
-    // Add all layers by default
-    existingLayer.addTo(map);
-    newLayer.addTo(map);
-    wsLayer.addTo(map);
-    wtpLayer.addTo(map);
-
-    // Legend
-    var legend = L.control({ position: 'bottomright' });
-    legend.onAdd = function() {
-      var div = L.DomUtil.create('div', 'legend');
-      div.innerHTML =
-        '<div class="legend-item"><i style="background:black"></i> បណ្តាញទុយោបច្ចុប្បន្ន</div>' +
-        '<div class="legend-item"><i style="background:white;"></i> បណ្តាញទុយោពង្រីក ថ្ងៃអនាគត</div>' +
-        '<div class="legend-item"><i class="circle" style="background:#3498db"></i> ស្ថានីយ (WS)</div>' +
-        '<div class="legend-item"><i class="circle" style="background:#f1c40f"></i> ស្ថានីយ (WTP)</div>';
-      return div;
-    };
-    legend.addTo(map);
-
-    // GitHub repo info
-    var githubUser = 'YOUR_USERNAME';
-    var githubRepo = 'YOUR_REPO';
-    var githubBranch = 'main';
-    if (githubUser === 'YOUR_USERNAME') githubUser = window.location.host.split('.')[0];
-    if (githubRepo === 'YOUR_REPO') {
-      var parts = window.location.pathname.split('/').filter(Boolean);
-      if (parts.length) githubRepo = parts[0];
-    }
-
-    // Fetch files from GitHub repo root
-    var apiUrl = `https://api.github.com/repos/${githubUser}/${githubRepo}/contents?ref=${githubBranch}`;
-    fetch(apiUrl)
-      .then(res => res.json())
-      .then(files => {
-        files.filter(f => f.type === 'file' && /\.(geojson?|json)$/i.test(f.name))
-          .forEach(file => {
-            var rawUrl = `https://raw.githubusercontent.com/${githubUser}/${githubRepo}/${githubBranch}/${file.name}`;
-            fetch(rawUrl)
-              .then(r => r.json())
-              .then(data => {
-                (data.features || []).forEach(feat => {
-                  var geom = feat.geometry && feat.geometry.type;
-                  if (geom && geom.includes('Line')) {
-                    if (feat.properties && feat.properties.diameter) {
-                      existingLayer.addData(feat);
-                    } else {
-                      newLayer.addData(feat);
-                    }
-                  } else if (geom === 'Point') {
-                    var name = feat.properties && feat.properties.name || '';
-                    if (name.includes('WS')) {
-                      wsLayer.addData(feat);
-                    } else if (name.includes('WTP')) {
-                      wtpLayer.addData(feat);
-                    }
-                  }
-                });
-              })
-              .catch(err => console.error('Error loading', file.name, err));
+    // Add GitHub data loader as before
+    var githubUser='YOUR_USERNAME', githubRepo='YOUR_REPO', githubBranch='main';
+    if(githubUser==='YOUR_USERNAME') githubUser=window.location.host.split('.')[0];
+    if(githubRepo==='YOUR_REPO'){ var parts=window.location.pathname.split('/').filter(Boolean); if(parts.length) githubRepo=parts[0]; }
+    var apiUrl=`https://api.github.com/repos/${githubUser}/${githubRepo}/contents?ref=${githubBranch}`;
+    fetch(apiUrl).then(r=>r.json()).then(files=>{
+      files.filter(f=>f.type==='file'&&/\.(geojson?|json)$/i.test(f.name)).forEach(f=>{
+        var raw=`https://raw.githubusercontent.com/${githubUser}/${githubRepo}/${githubBranch}/${f.name}`;
+        fetch(raw).then(r=>r.json()).then(data=>{
+          data.features.forEach(function(feat){
+            var geom=feat.geometry&&feat.geometry.type;
+            if(geom.includes('Line')){
+              if(feat.properties.diameter) existingLayer.addData(feat);
+              else newLayer.addData(feat);
+            } else if(geom==='Point'){
+              var n=feat.properties.name||'';
+              if(n.includes('WS')) wsLayer.addData(feat);
+              else if(n.includes('WTP')) wtpLayer.addData(feat);
+            }
           });
-      })
-      .catch(err => console.error('Error listing repository contents:', err));
+        }).catch(e=>console.error('load',f.name,e));
+      });
+    }).catch(e=>console.error('list repo',e));
+
+    // Initialize search control on all point layers
+    var allPoints = L.featureGroup([wsLayer, wtpLayer]);
+    var searchControl = new L.Control.Search({ layer: allPoints, propertyName:'name', marker:false, moveToLocation:function(latlng, title, map){ map.setView(latlng, 14); } });
+    map.addControl(searchControl);
+    document.getElementById('search-control').appendChild(searchControl.getContainer());
   </script>
 </body>
 </html>
