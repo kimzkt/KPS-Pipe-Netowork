@@ -16,61 +16,80 @@
   <div id="map"></div>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    // --- Map Initialization ---
+    // --- Initialize Map ---
     var map = L.map('map').setView([11.4, 104.5], 10);
     var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
     var esriSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles © Esri & contributors' });
     var baseMaps = { "Street Map": osm, "Satellite (Esri)": esriSat };
-    var overlays = {};
-    var controlLayers = L.control.layers(baseMaps, overlays).addTo(map);
 
-    // --- GitHub Repo Configuration ---
-    // Replace these with your GitHub username and repo name if autodetect fails
+    // --- Layer Groups for WS and WTP ---
+    var wsLayer = L.geoJSON(null, {
+      pointToLayer: function(feature, latlng) {
+        return L.circleMarker(latlng, { radius: 6, fillColor: '#3498db', color: '#2980b9', weight: 1, fillOpacity: 0.8 });
+      },
+      style: function(feature) { return { color: '#3498db', weight: 2 }; },
+      onEachFeature: function(feature, layer) {
+        var popup = '<table>';
+        for (var key in feature.properties) popup += '<tr><th>'+key+'</th><td>'+feature.properties[key]+'</td></tr>';
+        popup += '</table>';
+        layer.bindPopup(popup);
+      }
+    }).addTo(map);
+
+    var wtpLayer = L.geoJSON(null, {
+      pointToLayer: function(feature, latlng) {
+        return L.circleMarker(latlng, { radius: 6, fillColor: '#f1c40f', color: '#d4ac0d', weight: 1, fillOpacity: 0.8 });
+      },
+      style: function(feature) { return { color: '#f1c40f', weight: 2 }; },
+      onEachFeature: function(feature, layer) {
+        var popup = '<table>';
+        for (var key in feature.properties) popup += '<tr><th>'+key+'</th><td>'+feature.properties[key]+'</td></tr>';
+        popup += '</table>';
+        layer.bindPopup(popup);
+      }
+    }).addTo(map);
+
+    // --- Layer Control ---
+    var overlays = {
+      'Water Sources (WS)': wsLayer,
+      'Water Treatment Plants (WTP)': wtpLayer
+    };
+    L.control.layers(baseMaps, overlays).addTo(map);
+
+    // --- GitHub Repo Info (replace with your own or use autodetect) ---
     var githubUser = 'YOUR_USERNAME';
     var githubRepo = 'YOUR_REPO';
     var githubBranch = 'main';
-
-    // Attempt to autodetect user/repo from Pages URL
-    if (githubUser === 'YOUR_USERNAME') {
-      githubUser = window.location.host.split('.')[0];
-    }
+    if (githubUser === 'YOUR_USERNAME') githubUser = window.location.host.split('.')[0];
     if (githubRepo === 'YOUR_REPO') {
       var parts = window.location.pathname.split('/').filter(Boolean);
       if (parts.length) githubRepo = parts[0];
     }
 
-    // --- Load all JSON/GeoJSON from repo root ---
+    // --- Fetch and Classify GeoJSON/JSON from Repo Root ---
     var apiUrl = `https://api.github.com/repos/${githubUser}/${githubRepo}/contents?ref=${githubBranch}`;
     fetch(apiUrl)
       .then(res => res.json())
       .then(files => {
-        files.filter(f => f.type === 'file' && /\.geojson?$|\.json$/i.test(f.name))
+        files.filter(f => f.type==='file' && /\.(geojson?|json)$/i.test(f.name))
              .forEach(file => {
                var rawUrl = `https://raw.githubusercontent.com/${githubUser}/${githubRepo}/${githubBranch}/${file.name}`;
                fetch(rawUrl)
                  .then(r => r.json())
                  .then(data => {
-                   var layer = L.geoJSON(data, {
-                     pointToLayer: function(feature, latlng) {
-                       return L.circleMarker(latlng, { radius: 6, fillColor: '#3498db', color: '#2980b9', weight: 1, fillOpacity: 0.8 });
-                     },
-                     style: function(feature) {
-                       return { color: '#27ae60', weight: 2 };
-                     },
-                     onEachFeature: function(feature, layer) {
-                       var props = feature.properties || {};
-                       var popup = '<table>';
-                       for (var key in props) popup += `<tr><th>${key}</th><td>${props[key]}</td></tr>`;
-                       popup += '</table>';
-                       layer.bindPopup(popup);
+                   data.features.forEach(function(feat) {
+                     var nameVal = feat.properties && feat.properties.name;
+                     if (nameVal && nameVal.includes('WS')) {
+                       wsLayer.addData(feat);
+                     } else if (nameVal && nameVal.includes('WTP')) {
+                       wtpLayer.addData(feat);
                      }
-                   }).addTo(map);
-                   controlLayers.addOverlay(layer, file.name);
+                   });
                  })
-                 .catch(err => console.error('Failed loading', file.name, err));
+                 .catch(err => console.error('Error loading', file.name, err));
              });
       })
-      .catch(err => console.error('Error listing repo contents:', err));
+      .catch(err => console.error('Error listing repository contents:', err));
   </script>
 </body>
 </html>
