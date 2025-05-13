@@ -21,12 +21,35 @@
     .leaflet-sidebar.collapsed { width:50px !important; }
     .leaflet-sidebar-tabs a { width:50px; height:50px; line-height:50px; }
     .leaflet-sidebar-content { padding:10px; font-size:14px; }
-    .leaflet-sidebar-header { font-size:16px; }
+    .leaflet-sidebar-header { font-size:16px; margin-bottom:8px; }
     .layer-checkbox label { font-size:14px; }
     /* Legend styling */
-    .legend { position:absolute; bottom:20px; right:10px; background:white; padding:10px; font-size:14px; border-radius:5px; box-shadow:0 0 6px rgba(0,0,0,0.3); }
-    .legend .legend-item { display:flex; align-items:center; margin-bottom:6px; }
-    .legend i { width:18px; height:18px; margin-right:8px; display:inline-block; border:1px solid #000; }
+    .legend {
+      position:absolute;
+      bottom:20px;
+      right:10px;
+      background:white;
+      padding:10px 12px;
+      font-size:14px;
+      border-radius:5px;
+      box-shadow:0 0 6px rgba(0,0,0,0.3);
+      width:180px;
+    }
+    .legend .legend-item {
+      display:flex;
+      align-items:center;
+      margin-bottom:8px;
+      white-space:nowrap;
+    }
+    .legend .legend-item:last-child { margin-bottom:0; }
+    .legend i {
+      width:18px;
+      height:18px;
+      margin-right:8px;
+      display:inline-block;
+      border:1px solid #000;
+      flex-shrink:0;
+    }
     .legend i.circle { border-radius:50%; }
   </style>
 </head>
@@ -75,36 +98,69 @@
     // Define layers
     var existingLayer = L.geoJSON(null, {
       style:{color:'black',weight:2},
-      onEachFeature:function(f,layer){layer.bindPopup('<strong>Pipe Code:</strong> '+(f.properties.pipe_code||'N/A')+'<br><strong>Length:</strong> '+(f.properties.length||'N/A')+' m');}
+      onEachFeature:function(f,layer){ layer.bindPopup('<strong>Pipe Code:</strong> '+(f.properties.pipe_code||'N/A')+'<br><strong>Length:</strong> '+(f.properties.length||'N/A')+' m'); }
     }).addTo(map);
     var newLayer = L.geoJSON(null, {
       style:{color:'white',weight:2},
-      onEachFeature:function(f,layer){layer.bindPopup('<strong>Pipe Code:</strong> '+(f.properties.pipe_code||'N/A')+'<br><strong>Length:</strong> '+(f.properties.length||'N/A')+' m');}
+      onEachFeature:function(f,layer){ layer.bindPopup('<strong>Pipe Code:</strong> '+(f.properties.pipe_code||'N/A')+'<br><strong>Length:</strong> '+(f.properties.length||'N/A')+' m'); }
     }).addTo(map);
     var wsLayer = L.geoJSON(null, {
-      pointToLayer:function(f,latlng){return L.circleMarker(latlng,{radius:6,fillColor:'#3498db',color:'#2980b9',weight:1,fillOpacity:0.8});},
-      onEachFeature:function(f,layer){var p=f.properties||{};var popup='<table>';for(var k in p)popup+='<tr><th>'+k+'</th><td>'+p[k]+'</td></tr>';popup+='</table>';layer.bindPopup(popup);}    }).addTo(map);
+      pointToLayer:function(f,latlng){ return L.circleMarker(latlng,{radius:6,fillColor:'#3498db',color:'#2980b9',weight:1,fillOpacity:0.8}); },
+      onEachFeature:function(f,layer){ var p=f.properties||{}; var popup='<table>'; for(var k in p) popup+='<tr><th>'+k+'</th><td>'+p[k]+'</td></tr>'; popup+='</table>'; layer.bindPopup(popup); }
+    }).addTo(map);
     var wtpLayer = L.geoJSON(null, {
-      pointToLayer:function(f,latlng){return L.circleMarker(latlng,{radius:6,fillColor:'#f1c40f',color:'#d4ac0d',weight:1,fillOpacity:0.8});},
-      onEachFeature:function(f,layer){var p=f.properties||{};var popup='<table>';for(var k in p)popup+='<tr><th>'+k+'</th><td>'+p[k]+'</td></tr>';popup+='</table>';layer.bindPopup(popup);}    }).addTo(map);
+      pointToLayer:function(f,latlng){ return L.circleMarker(latlng,{radius:6,fillColor:'#f1c40f',color:'#d4ac0d',weight:1,fillOpacity:0.8}); },
+      onEachFeature:function(f,layer){ var p=f.properties||{}; var popup='<table>'; for(var k in p) popup+='<tr><th>'+k+'</th><td>'+p[k]+'</td></tr>'; popup+='</table>'; layer.bindPopup(popup); }
+    }).addTo(map);
 
     // Sidebar layer toggles
-    var overlays={ 'បណ្តាញទុយោបច្ចុប្បន្ន':existingLayer, 'បណ្តាញទុយោពង្រីក៖ ថ្ងៃអនាគត':newLayer, 'ស្ថានីយ WS':wsLayer, 'ស្ថានីយ WTP':wtpLayer };
-    var layerList=document.getElementById('layer-list');Object.keys(overlays).forEach(function(name){var d=document.createElement('div');d.className='layer-checkbox';var i=document.createElement('input');i.type='checkbox';i.checked=true;i.id=name;i.onchange=function(){this.checked?map.addLayer(overlays[name]):map.removeLayer(overlays[name]);};var l=document.createElement('label');l.htmlFor=name;l.innerText=name;d.appendChild(i);d.appendChild(l);layerList.appendChild(d);});
+    var overlays={
+      'បណ្តាញទុយោបច្ចុប្បន្ន':existingLayer,
+      'បណ្តាញទុយោពង្រីក៖ ថ្ងៃអនាគត':newLayer,
+      'ស្ថានីយ WS':wsLayer,
+      'ស្ថានីយ WTP':wtpLayer
+    };
+    var layerList=document.getElementById('layer-list');
+    Object.keys(overlays).forEach(function(name){
+      var d=document.createElement('div'); d.className='layer-checkbox';
+      var i=document.createElement('input'); i.type='checkbox'; i.checked=true; i.id=name;
+      i.onchange=function(){ this.checked?map.addLayer(overlays[name]):map.removeLayer(overlays[name]); };
+      var l=document.createElement('label'); l.htmlFor=name; l.innerText=name;
+      d.appendChild(i); d.appendChild(l); layerList.appendChild(d);
+    });
 
     // GitHub loader
-    var u='YOUR_USERNAME',r='YOUR_REPO',b='main';if(u==='YOUR_USERNAME')u=window.location.host.split('.')[0];if(r==='YOUR_REPO'){var p=window.location.pathname.split('/').filter(Boolean);if(p.length)r=p[0];}
-    fetch(`https://api.github.com/repos/${u}/${r}/contents?ref=${b}`).then(r=>r.json()).then(fs=>fs.filter(f=>f.type==='file'&&/\.(geojson?|json)$/i.test(f.name)).forEach(f=>fetch(`https://raw.githubusercontent.com/${u}/${r}/${b}/${f.name}`).then(r=>r.json()).then(d=>{var feats=[];if(d.type==='FeatureCollection'&&Array.isArray(d.features))feats=d.features;else if(Array.isArray(d))feats=d;else for(var k in d)if(Array.isArray(d[k])){feats=d[k];break;}feats.forEach(function(fe){var t=fe.geometry&&fe.geometry.type;if(t&&t.includes('Line')){fe.properties&&fe.properties.diameter?existingLayer.addData(fe):newLayer.addData(fe);}else if(t==='Point'){var n=fe.properties&&fe.properties.name||'';if(n.includes('WS'))wsLayer.addData(fe);else if(n.includes('WTP'))wtpLayer.addData(fe);} });})));
+    var u='YOUR_USERNAME',r='YOUR_REPO',b='main';
+    if(u==='YOUR_USERNAME') u=window.location.host.split('.')[0];
+    if(r==='YOUR_REPO'){ var p=window.location.pathname.split('/').filter(Boolean); if(p.length) r=p[0]; }
+    fetch(`https://api.github.com/repos/${u}/${r}/contents?ref=${b}`)
+      .then(res=>res.json())
+      .then(files=> files.filter(f=>f.type==='file'&&/\.(geojson?|json)$/i.test(f.name)).forEach(f=>
+        fetch(`https://raw.githubusercontent.com/${u}/${r}/${b}/${f.name}`)
+          .then(r=>r.json()).then(d=>{
+            var feats=[];
+            if(d.type==='FeatureCollection'&&Array.isArray(d.features)) feats=d.features;
+            else if(Array.isArray(d)) feats=d;
+            else for(var k in d) if(Array.isArray(d[k])){ feats=d[k]; break; }
+            feats.forEach(function(fe){ var t=fe.geometry&&fe.geometry.type; if(t&&t.includes('Line')){ fe.properties&&fe.properties.diameter?existingLayer.addData(fe):newLayer.addData(fe);} else if(t==='Point'){ var n=fe.properties&&fe.properties.name||''; if(n.includes('WS')) wsLayer.addData(fe); else if(n.includes('WTP')) wtpLayer.addData(fe); } });
+          }).catch(e=>console.error('Error loading',f.name,e))
+      ));
 
     // Search control
-    var allPoints=L.featureGroup([wsLayer,wtpLayer]);var sc=new L.Control.Search({layer:allPoints,propertyName:'name',marker:false,moveToLocation:function(latlng){map.setView(latlng,14);}});map.addControl(sc);document.getElementById('search-control').appendChild(sc.getContainer());
+    var allPoints=L.featureGroup([wsLayer,wtpLayer]);
+    var sc=new L.Control.Search({ layer:allPoints, propertyName:'name', marker:false, moveToLocation:function(latlng){ map.setView(latlng,14); } });
+    map.addControl(sc);
+    document.getElementById('search-control').appendChild(sc.getContainer());
 
     // Legend
     var legend=L.control({position:'bottomright'});
-    legend.onAdd=function(){var d=L.DomUtil.create('div','legend');d.innerHTML='<div class="legend-item"><i style="background:black"></i> បណ្តាញទុយោបច្ចុប្បន្ន</div>'+
-      '<div class="legend-item"><i style="background:white"></i> បណ្តាញទុយោពង្រីក ថ្ងៃអនាគត</div>'+
-      '<div class="legend-item"><i class="circle" style="background:#3498db"></i> ស្ថានីយ WS</div>'+
-      '<div class="legend-item"><i class="circle" style="background:#f1c40f"></i> ស្ថានីយ WTP</div>';
+    legend.onAdd=function(){
+      var d=L.DomUtil.create('div','legend');
+      d.innerHTML=
+        '<div class="legend-item"><i style="background:black"></i><span>បណ្តាញទុយោបច្ចុប្បន្ន</span></div>'+
+        '<div class="legend-item"><i style="background:white"></i><span>បណ្តាញទុយោពង្រីក: ថ្ងៃអនាគត</span></div>'+
+        '<div class="legend-item"><i class="circle" style="background:#3498db"></i><span>ស្ថានីយ WS</span></div>'+
+        '<div class="legend-item"><i class="circle" style="background:#f1c40f"></i><span>ស្ថានីយ WTP</span></div>';
       return d;
     };
     legend.addTo(map);
