@@ -2,7 +2,7 @@
 <html lang="km">
 <head>
   <meta charset="utf-8" />
-  <title>ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ ដល់ ឆ្នាំ២០៤០</title>
+  <title>ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ ដល់ ឆ្នាំ២០២៤០</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Leaflet CSS -->
@@ -35,7 +35,6 @@
       font-size:14px;
       border-radius:5px;
       box-shadow:0 0 6px rgba(0,0,0,0.3);
-      /* Increased width for longer labels */
       width:260px;
     }
     .legend .legend-item {
@@ -57,7 +56,7 @@
   </style>
 </head>
 <body>
-  <div id="header">ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ ដល់ ឆ្នាំ២០៤០</div>
+  <div id="header">ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ ដល់ ឆ្នាំ២០២៤០</div>
 
   <!-- Sidebar container -->
   <div id="sidebar" class="leaflet-sidebar collapsed">
@@ -93,6 +92,9 @@
     var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'© OSM' }).addTo(map);
     var esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom:19, attribution:'© Esri' });
     L.control.layers({ 'Street': osm, 'Satellite': esri }).addTo(map);
+
+    // Add scale bar (km)
+    L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
 
     // Create sidebar
     var sidebar = L.control.sidebar({ container:'sidebar', autopan:true }).addTo(map);
