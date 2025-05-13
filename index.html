@@ -151,28 +151,33 @@
           }).catch(e=>console.error('Error loading',f.name,e))
       ));
 
-    // Search control
-    var allPoints=L.featureGroup([wsLayer,wtpLayer]);
-    var sc=new L.Control.Search({ layer:allPoints, propertyName:'name', marker:false, moveToLocation:function(latlng){ map.setView(latlng,14); } });
+    // Search control always expanded
+    var allPoints = L.featureGroup([wsLayer, wtpLayer]);
+    var sc = new L.Control.Search({
+      layer: allPoints,
+      propertyName: 'name',
+      marker: false,
+      collapsed: false,
+      textPlaceholder: 'ស្វែងរក...',
+      moveToLocation: function(latlng) { map.setView(latlng, 14); }
+    });
     map.addControl(sc);
+    // Insert search control into sidebar
     document.getElementById('search-control').appendChild(sc.getContainer());
-
-    // Auto open and focus search on icon click
+    // Focus input when search pane opens
     var searchTab = document.querySelector('.leaflet-sidebar-tabs a[href="#searchpane"]');
-    if(searchTab) {
+    if (searchTab) {
       searchTab.addEventListener('click', function(e) {
         e.preventDefault();
         sidebar.open('searchpane');
         setTimeout(function() {
           var inp = document.querySelector('input.leaflet-search-input');
-          if(inp) inp.focus();
+          if (inp) inp.focus();
         }, 200);
       });
     }
 
-    // Legend
-    var legend=L.control({position:'bottomright'});
-    legend.onAdd=function(){
+    // Legend=function(){
       var d=L.DomUtil.create('div','legend');
       d.innerHTML=
         '<div class="legend-item"><i style="background:black"></i><span>បណ្តាញទុយោបច្ចុប្បន្ន</span></div>'+
