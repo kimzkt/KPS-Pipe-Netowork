@@ -2,7 +2,7 @@
 <html lang="km">
 <head>
   <meta charset="utf-8" />
-  <title>ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ ដល់ ឆ្នាំ២០២៤០</title>
+  <title>ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ ដល់ ឆ្នាំ២០៤០</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Leaflet CSS -->
@@ -16,6 +16,7 @@
     body { margin:0; padding:0; font-family:"Khmer OS","Noto Sans Khmer",sans-serif; }
     #header { background:#005cbf; color:white; padding:16px; text-align:center; font-size:22px; font-weight:bold; }
     #map { position:absolute; top:64px; bottom:0; right:0; left:0; }
+
     /* Sidebar sizing and fonts */
     .leaflet-sidebar { width:260px !important; }
     .leaflet-sidebar.collapsed { width:50px !important; }
@@ -23,6 +24,7 @@
     .leaflet-sidebar-content { padding:10px; font-size:14px; }
     .leaflet-sidebar-header { font-size:16px; margin-bottom:8px; }
     .layer-checkbox label { font-size:14px; }
+
     /* Legend styling */
     .legend {
       position:absolute;
@@ -33,7 +35,8 @@
       font-size:14px;
       border-radius:5px;
       box-shadow:0 0 6px rgba(0,0,0,0.3);
-      width:180px;
+      /* Increased width for longer labels */
+      width:260px;
     }
     .legend .legend-item {
       display:flex;
@@ -43,7 +46,7 @@
     }
     .legend .legend-item:last-child { margin-bottom:0; }
     .legend i {
-      width:28px;
+      width:18px;
       height:18px;
       margin-right:8px;
       display:inline-block;
@@ -54,7 +57,7 @@
   </style>
 </head>
 <body>
-  <div id="header">ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ ដល់ ឆ្នាំ២០២៤០</div>
+  <div id="header">ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ ដល់ ឆ្នាំ២០៤០</div>
 
   <!-- Sidebar container -->
   <div id="sidebar" class="leaflet-sidebar collapsed">
