@@ -157,6 +157,19 @@
     map.addControl(sc);
     document.getElementById('search-control').appendChild(sc.getContainer());
 
+    // Auto open and focus search on icon click
+    var searchTab = document.querySelector('.leaflet-sidebar-tabs a[href="#searchpane"]');
+    if(searchTab) {
+      searchTab.addEventListener('click', function(e) {
+        e.preventDefault();
+        sidebar.open('searchpane');
+        setTimeout(function() {
+          var inp = document.querySelector('input.leaflet-search-input');
+          if(inp) inp.focus();
+        }, 200);
+      });
+    }
+
     // Legend
     var legend=L.control({position:'bottomright'});
     legend.onAdd=function(){
