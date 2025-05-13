@@ -2,48 +2,43 @@
 <html lang="km">
 <head>
   <meta charset="utf-8" />
-  <title>ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ ដល់ ឆ្នាំ២០២៤០</title>
+  <title>ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ ដល់ ២០២៤០</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Leaflet CSS -->
+  <!-- CSS Dependencies -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <!-- Sidebar CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet-sidebar-v2/css/leaflet-sidebar.min.css" />
-  <!-- Search CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet-search/dist/leaflet-search.min.css" />
-
   <style>
     body { margin:0; padding:0; font-family:"Khmer OS","Noto Sans Khmer",sans-serif; }
-    #header { background:#005cbf; color:white; padding:16px; text-align:center; font-size:22px; font-weight:bold; }
-    #map { position:absolute; top:64px; bottom:0; right:0; left:0; }
+    #header { background:#005cbf; color:#fff; padding:12px; text-align:center; font-size:20px; }
+    #map { position:absolute; top:48px; bottom:0; left:0; right:0; }
 
     /* Sidebar */
     .leaflet-sidebar { width:260px !important; }
-    .leaflet-sidebar.collapsed { width:50px !important; }
     .leaflet-sidebar-tabs a { width:50px; height:50px; line-height:50px; }
-    .leaflet-sidebar-content { padding:10px; font-size:14px; }
+    .leaflet-sidebar-content { padding:8px; font-size:14px; }
     .leaflet-sidebar-header { font-size:16px; margin-bottom:8px; }
-    .layer-checkbox label { font-size:14px; }
+    .layer-checkbox { margin:4px 0; }
 
-    /* Search control styling */
-    #search-control .leaflet-search-wrap { display:flex; width:100% !important; margin-bottom:10px; }
-    #search-control .leaflet-search-input { flex:1; padding:6px 10px; font-size:16px; border-radius:4px; border:1px solid #ccc; }
-    #search-control .leaflet-search-button { margin-left:-35px !important; width:30px; height:30px; background:none; border:none; cursor:pointer; }
+    /* Search input styling */
+    #search-control .leaflet-search-wrap { display:flex; width:100% !important; }
+    #search-control .leaflet-search-input { flex:1; padding:6px; font-size:16px; }
+    #search-control .leaflet-search-button { margin-left:-32px; width:24px; height:24px; background:none; border:none; }
 
-    /* Legend styling */
-    .legend { position:absolute; bottom:20px; right:10px; background:white; padding:10px 12px; font-size:14px; border-radius:5px; box-shadow:0 0 6px rgba(0,0,0,0.3); width:260px; }
-    .legend .legend-item { display:flex; align-items:center; margin-bottom:8px; white-space:nowrap; }
-    .legend .legend-item:last-child { margin-bottom:0; }
-    .legend i { width:18px; height:18px; margin-right:8px; display:inline-block; border:1px solid #000; flex-shrink:0; }
+    /* Legend */
+    .legend { position:absolute; bottom:20px; right:10px; background:#fff; padding:8px; font-size:14px; border-radius:4px; box-shadow:0 0 6px rgba(0,0,0,0.3); width:260px; }
+    .legend-item { display:flex; align-items:center; margin-bottom:6px; }
+    .legend-item:last-child { margin-bottom:0; }
+    .legend i { width:18px; height:18px; margin-right:8px; border:1px solid #000; }
     .legend i.circle { border-radius:50%; }
-    /* Scale Denominator */
-    .leaflet-control-scale-denominator { background:white; padding:3px 6px; font-size:12px; line-height:1.2; border:1px solid rgba(0,0,0,0.2); border-radius:4px; }
+
+    /* Scale denominator */
+    .leaflet-control-scale-denominator { background:#fff; padding:4px 6px; font-size:12px; border:1px solid rgba(0,0,0,0.2); border-radius:4px; }
   </style>
 </head>
 <body>
-  <div id="header">ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ឆ្នាំ២០២៥ ដល់ ឆ្នាំ២០២៤០</div>
-
-  <!-- Sidebar -->
+  <div id="header">ប្លង់បណ្តាញទុយោទឹកស្អាត ខេត្តកំពង់ស្ពឺ ២០២៥–២០២៤០</div>
   <div id="sidebar" class="leaflet-sidebar collapsed">
     <div class="leaflet-sidebar-tabs">
       <ul role="tablist">
@@ -52,78 +47,119 @@
       </ul>
     </div>
     <div class="leaflet-sidebar-content">
-      <div class="leaflet-sidebar-pane" id="layers">
-        <h1 class="leaflet-sidebar-header">ស្រទាប់បង្ហាញ<button class="leaflet-sidebar-close"><i class="fa fa-chevron-right"></i></button></h1>
+      <div id="layers" class="leaflet-sidebar-pane">
+        <h1 class="leaflet-sidebar-header">ស្រទាប់<button class="leaflet-sidebar-close"><i class="fa fa-chevron-right"></i></button></h1>
         <div id="layer-list"></div>
       </div>
-      <div class="leaflet-sidebar-pane" id="searchpane">
+      <div id="searchpane" class="leaflet-sidebar-pane">
         <h1 class="leaflet-sidebar-header">ស្វែងរក<button class="leaflet-sidebar-close"><i class="fa fa-chevron-right"></i></button></h1>
         <div id="search-control"></div>
       </div>
     </div>
   </div>
-
   <div id="map"></div>
 
-  <!-- Dependencies -->
+  <!-- JS Dependencies -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-sidebar-v2/js/leaflet-sidebar.min.js"></script>
   <script src="https://unpkg.com/leaflet-search/dist/leaflet-search.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-
   <script>
+    // Initialize map and base layers
     var map = L.map('map').setView([11.4, 104.5], 10);
-    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19, attribution:'© OSM'}).addTo(map);
-    var esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19, attribution:'© Esri'});
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OSM', maxZoom:19 }).addTo(map);
+    var esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution:'© Esri', maxZoom:19 });
     L.control.layers({'Street':osm,'Satellite':esri}).addTo(map);
 
-    // Add distance scale
+    // Scale bar and scale denominator
     L.control.scale({ position:'bottomleft', metric:true, imperial:false }).addTo(map);
-    // Add scale denominator control
-    L.control.scaleDenominator = function(opts) {
-      var control = L.control(opts);
-      control.onAdd = function(map) {
-        var container = L.DomUtil.create('div','leaflet-control-scale-denominator');
-        function update() {
-          var center = map.getCenter().lat;
-          var zoom = map.getZoom();
-          var res = 156543.03392804097 * Math.cos(center * Math.PI/180) / Math.pow(2,zoom);
-          var dpi = 96;
-          var mpu = 0.0254;
-          var scale = res * dpi / mpu;
-          container.innerHTML = 'Scale: 1:' + Math.round(scale).toLocaleString();
-        }
-        map.on('zoomend move', update);
-        update();
-        return container;
-      };
-      return control;
-    };
+    var ScaleDenominator = L.Control.extend({
+      options:{ position:'bottomleft' },
+      onAdd:function(map){
+        this._div = L.DomUtil.create('div','leaflet-control-scale-denominator');
+        map.on('zoomend moveend', this._update, this);
+        this._update();
+        return this._div;
+      },
+      _update:function(){
+        var lat = map.getCenter().lat;
+        var z = map.getZoom();
+        var mpp = 156543.03392804097 * Math.cos(lat * Math.PI/180) / Math.pow(2,z);
+        var dpi = 96, mpu = 0.0254;
+        var scale = mpp * dpi / mpu;
+        this._div.innerHTML = 'ទំហំ៖ 1:' + Math.round(scale).toLocaleString();
+      }
+    });
+    L.control.scaleDenominator = function(opts){ return new ScaleDenominator(opts); };
     L.control.scaleDenominator({ position:'bottomleft' }).addTo(map);
 
     // Sidebar
     var sidebar = L.control.sidebar({ container:'sidebar', autopan:true }).addTo(map);
     sidebar.open('layers');
 
-    // Layers
-    var existingLayer = L.geoJSON(null,{style:{color:'black',weight:2},onEachFeature:function(f,l){l.bindPopup('Pipe Code: '+(f.properties.pipe_code||'N/A'));}}).addTo(map);
-    var newLayer      = L.geoJSON(null,{style:{color:'white',weight:2},onEachFeature:function(f,l){l.bindPopup('Pipe Code: '+(f.properties.pipe_code||'N/A'));}}).addTo(map);
-    var wsLayer       = L.geoJSON(null,{pointToLayer:function(f,latlng){return L.circleMarker(latlng,{radius:6,fillColor:'#3498db',color:'#2980b9',fillOpacity:0.8});},onEachFeature:function(f,l){var p=f.properties||{};var h='<table>';for(var k in p)h+='<tr><th>'+k+'</th><td>'+p[k]+'</td></tr>';h+='</table>';l.bindPopup(h);}}).addTo(map);
-    var wtpLayer      = L.geoJSON(null,{pointToLayer:function(f,latlng){return L.circleMarker(latlng,{radius:6,fillColor:'#f1c40f',color:'#d4ac0d',fillOpacity:0.8});},onEachFeature:function(f,l){var p=f.properties||{};var h='<table>';for(var k in p)h+='<tr><th>'+k+'</th><td>'+p[k]+'</td></tr>';h+='</table>';l.bindPopup(h);}}).addTo(map);
+    // Layers definitions
+    var existingLayer = L.geoJSON(null, { style:{color:'black',weight:2}, onEachFeature:function(f,l){ l.bindPopup('Code: '+(f.properties.pipe_code||'N/A')); } }).addTo(map);
+    var newLayer      = L.geoJSON(null, { style:{color:'white',weight:2}, onEachFeature:function(f,l){ l.bindPopup('Code: '+(f.properties.pipe_code||'N/A')); } }).addTo(map);
+    var wsLayer       = L.geoJSON(null, { pointToLayer:function(f,latlng){ return L.circleMarker(latlng,{radius:6,fillColor:'#3498db',color:'#2980b9',fillOpacity:0.8}); }, onEachFeature:function(f,l){ var p=f.properties||{}; var html='<table>'; for(var k in p){ html+='<tr><th>'+k+'</th><td>'+p[k]+'</td></tr>'; } html+='</table>'; l.bindPopup(html); } }).addTo(map);
+    var wtpLayer      = L.geoJSON(null, { pointToLayer:function(f,latlng){ return L.circleMarker(latlng,{radius:6,fillColor:'#f1c40f',color:'#d4ac0d',fillOpacity:0.8}); }, onEachFeature:function(f,l){ var p=f.properties||{}; var html='<table>'; for(var k in p){ html+='<tr><th>'+k+'</th><td>'+p[k]+'</td></tr>'; } html+='</table>'; l.bindPopup(html); } }).addTo(map);
 
-    // Sidebar toggles
-    var overlays={ 'បណ្តាញទុយោបច្ចុប្បន្ន':existingLayer,'បណ្តាញ ទុយោពង្រីក':newLayer,'ស្ថានីយ WS':wsLayer,'ស្ថានីយ WTP':wtpLayer };
-    Object.keys(overlays).forEach(function(name){var d=document.createElement('div');d.className='layer-checkbox';var i=document.createElement('input');i.type='checkbox';i.checked=true;i.id=name;i.onchange=function(){this.checked?map.addLayer(overlays[name]):map.removeLayer(overlays[name]);};var l=document.createElement('label');l.htmlFor=name;l.innerText=name;d.appendChild(i);d.appendChild(l);document.getElementById('layer-list').appendChild(d);} );
+    // Sidebar layer toggles
+    var overlays = {'បច្ចុប្បន្ន':existingLayer,'ពង្រីក':newLayer,'ស្ថានីយ WS':wsLayer,'ស្ថានីយ WTP':wtpLayer};
+    var list = document.getElementById('layer-list');
+    Object.keys(overlays).forEach(function(name){
+      var container=document.createElement('div'); container.className='layer-checkbox';
+      var checkbox=document.createElement('input'); checkbox.type='checkbox'; checkbox.checked=true; checkbox.id=name;
+      checkbox.onchange = function(){ this.checked?map.addLayer(overlays[name]):map.removeLayer(overlays[name]); };
+      var label=document.createElement('label'); label.htmlFor=name; label.innerText=name;
+      container.appendChild(checkbox); container.appendChild(label);
+      list.appendChild(container);
+    });
 
-    // GitHub loader
-    var u='YOUR_USERNAME',r='YOUR_REPO',b='main';if(u==='YOUR_USERNAME')u=window.location.host.split('.')[0];if(r==='YOUR_REPO'){var p=window.location.pathname.split('/').filter(Boolean);if(p.length)r=p[0];}
-    fetch(`https://api.github.com/repos/${u}/${r}/contents?ref=${b}`).then(res=>res.json()).then(files=>files.filter(f=>f.type==='file'&&/\.(geojson?|json)$/i.test(f.name)).forEach(f=>fetch(`https://raw.githubusercontent.com/${u}/${r}/${b}/${f.name}`).then(r=>r.json()).then(data=>{var feats=[];if(data.type==='FeatureCollection'&&Array.isArray(data.features))feats=data.features;else if(Array.isArray(data))feats=data;else for(var k in data)if(Array.isArray(data[k])){feats=data[k];break;}feats.forEach(function(fe){var t=fe.geometry&&fe.geometry.type;if(t&&t.includes('Line')){fe.properties&&fe.properties.diameter?existingLayer.addData(fe):newLayer.addData(fe);}else if(t==='Point'){var n=fe.properties&&fe.properties.name||'';if(n.includes('WS'))wsLayer.addData(fe);else if(n.includes('WTP'))wtpLayer.addData(fe);}});})););
+    // GitHub content loader
+    var user='YOUR_USERNAME', repo='YOUR_REPO', branch='main';
+    if(user==='YOUR_USERNAME') user=window.location.host.split('.')[0];
+    if(repo==='YOUR_REPO'){ var sp=window.location.pathname.split('/').filter(Boolean); if(sp.length) repo=sp[0]; }
+    fetch(`https://api.github.com/repos/${user}/${repo}/contents?ref=${branch}`)
+      .then(r=>r.json())
+      .then(files=>{
+        files.filter(f=>f.type==='file'&&/\.(geojson?|json)$/i.test(f.name)).forEach(f=>{
+          fetch(`https://raw.githubusercontent.com/${user}/${repo}/${branch}/${f.name}`)
+            .then(r=>r.json())
+            .then(data=>{
+              var feats=[];
+              if(data.type==='FeatureCollection'&&Array.isArray(data.features)) feats=data.features;
+              else if(Array.isArray(data)) feats=data;
+              else for(var k in data) if(Array.isArray(data[k])){ feats=data[k]; break; }
+              feats.forEach(function(feat){
+                var t=feat.geometry&&feat.geometry.type;
+                if(t&&t.includes('Line')){
+                  feat.properties&&feat.properties.diameter?existingLayer.addData(feat):newLayer.addData(feat);
+                } else if(t==='Point'){
+                  var nm=feat.properties&&feat.properties.name||'';
+                  if(nm.includes('WS')) wsLayer.addData(feat);
+                  else if(nm.includes('WTP')) wtpLayer.addData(feat);
+                }
+              });
+            });
+        });
+      });
 
-    // Search control
-    var allPoints=L.featureGroup([wsLayer,wtpLayer]);var sc=new L.Control.Search({layer:allPoints,propertyName:'name',marker:false,moveToLocation:function(latlng){map.setView(latlng,14);}});map.addControl(sc);document.getElementById('search-control').appendChild(sc.getContainer());
+    // Search
+    var allPts=L.featureGroup([wsLayer,wtpLayer]);
+    var search=L.control.search({ layer:allPts, propertyName:'name', marker:false, moveToLocation:function(latlng){ map.setView(latlng,14); } });
+    map.addControl(search);
+    document.getElementById('search-control').appendChild(search.getContainer());
 
     // Legend
-    var legend=L.control({position:'bottomright'});legend.onAdd=function(){var d=L.DomUtil.create('div','legend');d.innerHTML='<div class="legend-item"><i style="background:black"></i><span>បណ្តាញទុយោបច្ចុប្បន្ន</span></div><div class="legend-item"><i style="background:white"></i><span>បណ្តាញពង្រីក</span></div><div class="legend-item"><i class="circle" style="background:#3498db"></i><span>WS ស្ថានីយ</span></div><div class="legend-item"><i class="circle" style="background:#f1c40f"></i><span>WTP ស្ថានីយ</span></div>';return d;};legend.addTo(map);
+    var legend=L.control({position:'bottomright'});
+    legend.onAdd=function(){ var d=L.DomUtil.create('div','legend'); d.innerHTML=
+        '<div class="legend-item"><i style="background:black"></i> បណ្តាញបច្ចុប្បន្ន</div>'+
+        '<div class="legend-item"><i style="background:white"></i> បណ្តាញពង្រីក</div>'+
+        '<div class="legend-item"><i class="circle" style="background:#3498db"></i> ស្ថានីយ WS</div>'+
+        '<div class="legend-item"><i class="circle" style="background:#f1c40f"></i> ស្ថានីយ WTP</div>';
+      return d;
+    };
+    legend.addTo(map);
   </script>
 </body>
 </html>
