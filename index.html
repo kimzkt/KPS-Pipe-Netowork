@@ -151,20 +151,18 @@
           }).catch(e=>console.error('Error loading',f.name,e))
       ));
 
-    // Search control always expanded
+    // Search control
     var allPoints = L.featureGroup([wsLayer, wtpLayer]);
-    var sc = new L.Control.Search({
+    var searchControl = new L.Control.Search({
       layer: allPoints,
       propertyName: 'name',
       marker: false,
-      collapsed: false,
-      textPlaceholder: 'ស្វែងរក...',
       moveToLocation: function(latlng) { map.setView(latlng, 14); }
     });
-    map.addControl(sc);
-    // Insert search control into sidebar
-    document.getElementById('search-control').appendChild(sc.getContainer());
-    // Focus input when search pane opens
+    map.addControl(searchControl);
+    document.getElementById('search-control').appendChild(searchControl.getContainer());
+
+    // Auto open and focus search on icon click
     var searchTab = document.querySelector('.leaflet-sidebar-tabs a[href="#searchpane"]');
     if (searchTab) {
       searchTab.addEventListener('click', function(e) {
@@ -177,14 +175,16 @@
       });
     }
 
-    // Legend=function(){
-      var d=L.DomUtil.create('div','legend');
-      d.innerHTML=
-        '<div class="legend-item"><i style="background:black"></i><span>បណ្តាញទុយោបច្ចុប្បន្ន</span></div>'+
-        '<div class="legend-item"><i style="background:white"></i><span>បណ្តាញទុយោពង្រីក: ថ្ងៃអនាគត</span></div>'+
-        '<div class="legend-item"><i class="circle" style="background:#3498db"></i><span>ស្ថានីយ WS</span></div>'+
+    // Legend
+    var legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function() {
+      var div = L.DomUtil.create('div', 'legend');
+      div.innerHTML =
+        '<div class="legend-item"><i style="background:black"></i><span>បណ្តាញទុយោបច្ចុប្បន្ន</span></div>' +
+        '<div class="legend-item"><i style="background:white"></i><span>បណ្តាញទុយោពង្រីក: ថ្ងៃអនាគត</span></div>' +
+        '<div class="legend-item"><i class="circle" style="background:#3498db"></i><span>ស្ថានីយ WS</span></div>' +
         '<div class="legend-item"><i class="circle" style="background:#f1c40f"></i><span>ស្ថានីយ WTP</span></div>';
-      return d;
+      return div;
     };
     legend.addTo(map);
   </script>
