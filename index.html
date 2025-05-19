@@ -11,105 +11,108 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-search/dist/leaflet-search.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
   <style>
-    body { 
-      margin: 0; 
-      padding: 0; 
-      font-family: "Khmer OS", "Noto Sans Khmer", sans-serif; 
+    /* Set full height for html and body to ensure the map is visible */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: "Khmer OS","Noto Sans Khmer",sans-serif;
     }
-    /* Increased header font-size to 32px */
-    #header { 
-      background: #005cbf; 
-      color: #fff; 
-      padding: 12px; 
-      text-align: center; 
-      font-size: 32px; 
+    /* Increased header font-size */
+    #header {
+      background: #005cbf;
+      color: #fff;
+      padding: 12px;
+      text-align: center;
+      font-size: 32px;
     }
-    #map { 
-      position: absolute; 
-      top: 48px; 
-      bottom: 0; 
-      left: 0; 
-      right: 0; 
+    /* Adjust the map container. Note: update 'top' if the header height changes */
+    #map {
+      position: absolute;
+      top: 48px;
+      bottom: 0;
+      left: 0;
+      right: 0;
     }
-    .leaflet-sidebar { 
-      width: 260px !important; 
+    .leaflet-sidebar {
+      width: 260px !important;
     }
-    .leaflet-sidebar.collapsed { 
-      width: 50px !important; 
+    .leaflet-sidebar.collapsed {
+      width: 50px !important;
     }
-    .leaflet-sidebar-tabs a { 
-      width: 50px; 
-      height: 50px; 
-      line-height: 50px; 
+    .leaflet-sidebar-tabs a {
+      width: 50px;
+      height: 50px;
+      line-height: 50px;
     }
-    .leaflet-sidebar-content { 
-      padding: 8px; 
-      font-size: 14px; 
+    .leaflet-sidebar-content {
+      padding: 8px;
+      font-size: 14px;
     }
-    .leaflet-sidebar-header { 
-      font-size: 16px; 
-      margin-bottom: 8px; 
+    .leaflet-sidebar-header {
+      font-size: 16px;
+      margin-bottom: 8px;
     }
-    .layer-checkbox { 
-      margin: 4px 0; 
+    .layer-checkbox {
+      margin: 4px 0;
     }
-    #search-control .leaflet-search-wrap { 
-      display: flex; 
-      width: 100% !important; 
-      margin-bottom: 10px; 
+    #search-control .leaflet-search-wrap {
+      display: flex;
+      width: 100% !important;
+      margin-bottom: 10px;
     }
-    #search-control .leaflet-search-input { 
-      flex: 1; 
-      padding: 6px; 
-      font-size: 16px; 
-      border-radius: 4px; 
+    #search-control .leaflet-search-input {
+      flex: 1;
+      padding: 6px;
+      font-size: 16px;
+      border-radius: 4px;
     }
-    #search-control .leaflet-search-button { 
-      margin-left: -32px; 
-      width: 24px; 
-      height: 24px; 
+    #search-control .leaflet-search-button {
+      margin-left: -32px;
+      width: 24px;
+      height: 24px;
     }
     .legend {
-      position: absolute; 
-      bottom: 20px; 
-      right: 10px; 
-      background: #fff; 
-      padding: 8px; 
-      font-size: 14px; 
-      border-radius: 4px; 
-      box-shadow: 0 0 6px rgba(0,0,0,0.3); 
+      position: absolute;
+      bottom: 20px;
+      right: 10px;
+      background: #fff;
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 4px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.3);
       width: 260px;
     }
-    .legend-item { 
-      display: flex; 
-      align-items: center; 
-      margin-bottom: 6px; 
-      white-space: nowrap; 
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+      white-space: nowrap;
     }
-    .legend-item:last-child { 
-      margin-bottom: 0; 
+    .legend-item:last-child {
+      margin-bottom: 0;
     }
-    .legend i { 
-      width: 18px; 
-      height: 18px; 
-      margin-right: 8px; 
-      border: 1px solid #000; 
+    .legend i {
+      width: 18px;
+      height: 18px;
+      margin-right: 8px;
+      border: 1px solid #000;
     }
-    .legend i.circle { 
-      border-radius: 50%; 
+    .legend i.circle {
+      border-radius: 50%;
     }
-    .leaflet-control-scale-denominator { 
-      background: #fff; 
-      padding: 4px 6px; 
-      font-size: 12px; 
-      border: 1px solid rgba(0,0,0,0.2); 
-      border-radius: 4px; 
-      margin-top: 4px; 
+    .leaflet-control-scale-denominator {
+      background: #fff;
+      padding: 4px 6px;
+      font-size: 12px;
+      border: 1px solid rgba(0,0,0,0.2);
+      border-radius: 4px;
+      margin-top: 4px;
     }
   </style>
 </head>
 <body>
-  <div id="header">ប្លង់បណ្តាយទុយោទឹកស្អាតសម្រាប់បច្ចុប្បន្ននិងឆ្នាំ២០៤០</div>
+  <div id="header">ប្លង់បណ្តាយទុយោទឹកស្អាតសម្រាប់បច្ចុប្បន្ននិងឆ្នាំ২০៤០</div>
   <div id="sidebar" class="leaflet-sidebar collapsed">
     <div class="leaflet-sidebar-tabs">
       <ul role="tablist">
@@ -152,7 +155,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
   <script>
     (async function() {
-      var map = L.map('map', { zoomControl:false }).setView([11.4, 104.5], 10);
+      var map = L.map('map', { zoomControl: false }).setView([11.4, 104.5], 10);
       var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OSM',
         maxZoom: 19
@@ -161,18 +164,18 @@
         attribution: '© Esri',
         maxZoom: 19
       });
-      L.control.layers({'Street': osm, 'Satellite': esri}).addTo(map);
-      L.control.zoom({position: 'topright'}).addTo(map);
-      L.control.scale({position: 'bottomleft', metric: true, imperial: false}).addTo(map);
+      L.control.layers({ 'Street': osm, 'Satellite': esri }).addTo(map);
+      L.control.zoom({ position: 'topright' }).addTo(map);
+      L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
       L.control.locate({ 
         position: 'topright', 
-        strings: {title: 'ស្វែងរកទីតាំង​របស់ខ្ញុំ'}
+        strings: { title: 'ស្វែងរកទីតាំង​របស់ខ្ញុំ' }
       }).addTo(map);
       
-      var sidebar = L.control.sidebar({container: 'sidebar', autopan: true}).addTo(map);
+      var sidebar = L.control.sidebar({ container: 'sidebar', autopan: true }).addTo(map);
       sidebar.open('layers');
       
-      var legend = L.control({position: 'bottomright'});
+      var legend = L.control({ position: 'bottomright' });
       legend.onAdd = () => {
         var d = L.DomUtil.create('div', 'legend');
         d.innerHTML = '<div class="legend-item"><i style="background:black"></i> បណ្តាញទុយោបច្ចុប្បន្ន</div>' +
