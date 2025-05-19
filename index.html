@@ -87,7 +87,12 @@
       var wtpLayer      = L.geoJSON(null, { pointToLayer:(f,latlng)=>L.circleMarker(latlng,{radius:6,fillColor:'#f1c40f',color:'#d4ac0d',fillOpacity:0.8}), onEachFeature:(f,l)=>{ var p=f.properties||{}; var html='<table>'; for(var k in p) html+='<tr><th>'+k+'</th><td>'+p[k]+'</td></tr>'; html+='</table>'; l.bindPopup(html); } }).addTo(map);
 
       // Layer toggles
-      var overlays = { 'បណ្តាញទុយោបច្ចុប្បន្ន':existingLayer, 'បណ្តាញទុយោពង្រីក':newLayer, 'ស្ថានីយ WS':wsLayer, 'ស្ថានីយ WTP':wtpLayer };
+      var overlays = {
+      'បណ្តាញទុយោបច្ចុប្បន្ន': existingLayer,
+      'បណ្តាញទុយោពង្រីក': newLayer,
+      'ទីតាំងប្រភពទឹក': wsLayer,
+      'ទីតាំងស្ថានីយទឹកស្អាត': wtpLayer
+    };
       var list = document.getElementById('layer-list'); Object.keys(overlays).forEach(name=>{ var d=document.createElement('div'); d.className='layer-checkbox'; var i=document.createElement('input'); i.type='checkbox'; i.checked=true; i.id=name; i.onchange=()=>i.checked?map.addLayer(overlays[name]):map.removeLayer(overlays[name]); var lbl=document.createElement('label'); lbl.htmlFor=name; lbl.innerText=name; d.appendChild(i); d.appendChild(lbl); list.appendChild(d); });
 
       // Load GeoJSON files
