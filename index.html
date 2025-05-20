@@ -10,26 +10,25 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-sidebar-v2/css/leaflet-sidebar.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-search/dist/leaflet-search.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
-
   <style>
     body { margin:0; padding:0; font-family:"Khmer OS","Noto Sans Khmer",sans-serif; }
     #header { background:#005cbf; color:#fff; padding:12px; text-align:center; font-size:20px; }
     #map { position:absolute; top:48px; bottom:0; left:0; right:0; }
 
-    /* Sidebar: lowered below header */
+    /* Sidebar lowered below header */
     .leaflet-sidebar { width:260px !important; top:80px !important; }
     .leaflet-sidebar.collapsed { width:50px !important; top:80px !important; }
 
-    /* Control positions */
-    .leaflet-top.leaflet-left .leaflet-control-search {
+    /* Search control pinned to top-left */
+    .leaflet-control-search {
       position: absolute !important;
-      top: 60px;
-      left: 260px;
-      width: 260px;
+      top: 60px !important;
+      left: 10px !important;
+      width: 260px !important;
       z-index: 1000;
     }
-    .leaflet-control-search .leaflet-search-wrap { width:100% !important; }
-    .leaflet-control-search-input { width:calc(100% - 40px) !important; font-size:16px; padding:6px 10px; }
+    .leaflet-control-search .leaflet-search-wrap { width: 100% !important; }
+    .leaflet-control-search-input { width: calc(100% - 40px) !important; font-size: 16px; padding: 6px 10px; }
 
     /* Legend styling */
     .legend { position:absolute; bottom:20px; right:10px; background:#fff; padding:8px; font-size:14px; border-radius:4px; box-shadow:0 0 6px rgba(0,0,0,0.3); width:260px; }
@@ -38,14 +37,14 @@
     .legend i { width:18px; height:18px; margin-right:8px; border:1px solid #000; }
     .legend i.circle { border-radius:50%; }
 
-    /* Scale denominator */
+    /* Scale denominator styling */
     .leaflet-control-scale-denominator { background:#fff; padding:4px 6px; font-size:12px; border:1px solid rgba(0,0,0,0.2); border-radius:4px; margin-top:4px; }
   </style>
 </head>
 <body>
   <div id="header">ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ២០២៥–២០២៤០</div>
 
-  <!-- Sidebar: layers only -->
+  <!-- Sidebar container: layers only -->
   <div id="sidebar" class="leaflet-sidebar collapsed">
     <div class="leaflet-sidebar-tabs"><ul role="tablist">
       <li><a href="#layers" role="tab"><i class="fa fa-list"></i></a></li>
@@ -66,57 +65,51 @@
   <script src="https://unpkg.com/leaflet-search/dist/leaflet-search.min.js"></script>
   <script src="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-
   <script>
-  (async function() {
-    // Init map without default zoom
-    var map = L.map('map', { zoomControl:false }).setView([11.4,104.5],10);
-    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM',maxZoom:19}).addTo(map);
-    var esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri',maxZoom:19});
-    L.control.layers({'Street':osm,'Satellite':esri}).addTo(map);
+    (async function() {
+      // Initialize map without default zoom
+      var map = L.map('map', { zoomControl: false }).setView([11.4,104.5],10);
 
-    // Controls: zoom & locate on top-right
-    L.control.zoom({position:'topright'}).addTo(map);
-    L.control.locate({position:'topright',strings:{title:'ស្វែងរកទីតាំង​របស់ខ្ញុំ'}}).addTo(map);
+      // Base layers
+      var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM',maxZoom:19}).addTo(map);
+      var esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri',maxZoom:19});
+      L.control.layers({'Street':osm,'Satellite':esri}).addTo(map);
 
-    // Scale and denominator
-    L.control.scale({position:'bottomleft',metric:true,imperial:false}).addTo(map);
-    var ScaleDen = L.Control.extend({options:{position:'bottomleft'},onAdd:function(m){this._div=L.DomUtil.create('div','leaflet-control-scale-denominator');m.on('zoomend moveend',this._upd,this);this._upd();return this._div;},_upd:function(){var lat=map.getCenter().lat;var z=map.getZoom();var mpp=156543.0339*Math.cos(lat*Math.PI/180)/Math.pow(2,z);var scale=mpp*96/0.0254;this._div.innerHTML='ទំហំ៖ 1:'+Math.round(scale).toLocaleString();}});
-    L.control.scaleDenominator = opts=>new ScaleDen(opts);
-    L.control.scaleDenominator({position:'bottomleft'}).addTo(map);
+      // Zoom & Locate controls top-right
+      L.control.zoom({position:'topright'}).addTo(map);
+      L.control.locate({position:'topright',strings:{title:'ស្វែងរកទីតាំង​របស់ខ្ញុំ'}}).addTo(map);
 
-    // Sidebar for layers
-    var sidebar = L.control.sidebar({container:'sidebar',autopan:true}).addTo(map);
-    sidebar.open('layers');
+      // Scale bar & denominator bottom-left
+      L.control.scale({position:'bottomleft',metric:true,imperial:false}).addTo(map);
+      var ScaleDen = L.Control.extend({options:{position:'bottomleft'},onAdd:function(m){this._div=L.DomUtil.create('div','leaflet-control-scale-denominator');m.on('zoomend moveend',this._upd,this);this._upd();return this._div;},_upd:function(){var lat=map.getCenter().lat,z=map.getZoom(),mpp=156543.0339*Math.cos(lat*Math.PI/180)/Math.pow(2,z),scale=mpp*96/0.0254;this._div.innerHTML='ទំហំ៖ 1:'+Math.round(scale).toLocaleString();}});
+      L.control.scaleDenominator = opts=>new ScaleDen(opts);
+      L.control.scaleDenominator({position:'bottomleft'}).addTo(map);
 
-    // Layers
-    var existingLayer = L.geoJSON(null,{style:{color:'black',weight:2},onEachFeature:(f,l)=>l.bindPopup('Pipe Code: '+(f.properties.pipe_code||'N/A'))}).addTo(map);
-    var newLayer = L.geoJSON(null,{style:{color:'white',weight:2},onEachFeature:(f,l)=>l.bindPopup('Pipe Code: '+(f.properties.pipe_code||'N/A'))}).addTo(map);
-    var wsLayer = L.geoJSON(null,{pointToLayer:(f,latlng)=>L.circleMarker(latlng,{radius:6,fillColor:'#3498db',color:'#2980b9',fillOpacity:0.8}),onEachFeature:(f,l)=>{var p=f.properties||{};var html='<table>';for(var k in p)html+='<tr><th>'+k+'</th><td>'+p[k]+'</td></tr>';html+='</table>';l.bindPopup(html);}}).addTo(map);
-    var wtpLayer = L.geoJSON(null,{pointToLayer:(f,latlng)=>L.circleMarker(latlng,{radius:6,fillColor:'#f1c40f',color:'#d4ac0d',fillOpacity:0.8}),onEachFeature:(f,l)=>{var p=f.properties||{};var html='<table>';for(var k in p)html+='<tr><th>'+k+'</th><td>'+p[k]+'</td></tr>';html+='</table>';l.bindPopup(html);}}).addTo(map);
+      // Sidebar for layer toggles
+      var sidebar = L.control.sidebar({container:'sidebar',autopan:true}).addTo(map);
+      sidebar.open('layers');
+      var existingLayer = L.geoJSON(null,{style:{color:'black',weight:2},onEachFeature:(f,l)=>l.bindPopup('Pipe Code: '+(f.properties.pipe_code||'N/A'))}).addTo(map);
+      var newLayer      = L.geoJSON(null,{style:{color:'white',weight:2},onEachFeature:(f,l)=>l.bindPopup('Pipe Code: '+(f.properties.pipe_code||'N/A'))}).addTo(map);
+      var wsLayer       = L.geoJSON(null,{pointToLayer:(f,latlng)=>L.circleMarker(latlng,{radius:6,fillColor:'#3498db',color:'#2980b9',fillOpacity:0.8}),onEachFeature:(f,l)=>{var p=f.properties||{};var html='<table>';for(var k in p)html+='<tr><th>'+k+'</th><td>'+p[k]+'</td></tr>';html+'</table>';l.bindPopup(html);}}).addTo(map);
+      var wtpLayer      = L.geoJSON(null,{pointToLayer:(f,latlng)=>L.circleMarker(latlng,{radius:6,fillColor:'#f1c40f',color:'#d4ac0d',fillOpacity:0.8}),onEachFeature:(f,l)=>{var p=f.properties||{};var html='<table>';for(var k in p)html+='<tr><th>'+k+'</th><td>'+p[k]+'</td></tr>';html+'</table>';l.bindPopup(html);}}).addTo(map);
+      var overlays = {'បណ្តាញទុយោបច្ចុប្បន្ន':existingLayer,'បណ្តាញទុយោពង្រីក':newLayer,'ទីតាំងប្រភពទឹក':wsLayer,'ទីតាំងស្ថានីយទឹកស្អាត':wtpLayer};
+      var list = document.getElementById('layer-list'); Object.keys(overlays).forEach(name=>{var d=document.createElement('div');d.className='layer-checkbox';var i=document.createElement('input');i.type='checkbox';i.checked=true;i.id=name;i.onchange=()=>i.checked?map.addLayer(overlays[name]):map.removeLayer(overlays[name]);var lbl=document.createElement('label');lbl.htmlFor=name;lbl.innerText=name;d.appendChild(i);d.appendChild(lbl);list.appendChild(d);});
 
-    // Layer toggles
-    var overlays = {'បណ្តាញទុយោបច្ចុប្បន្ន':existingLayer,'បណ្តាញទុយោពង្រីក':newLayer,'ទីតាំងប្រភពទឹក':wsLayer,'ទីតាំងស្ថានីយទឹកស្អាត':wtpLayer};
-    var list = document.getElementById('layer-list');Object.keys(overlays).forEach(name=>{var d=document.createElement('div');d.className='layer-checkbox';var i=document.createElement('input');i.type='checkbox';i.checked=true;i.id=name;i.onchange=()=>i.checked?map.addLayer(overlays[name]):map.removeLayer(overlays[name]);var lbl=document.createElement('label');lbl.htmlFor=name;lbl.innerText=name;d.appendChild(i);d.appendChild(lbl);list.appendChild(d);});
+      // Load GeoJSON/JSON files from GitHub
+      var user='YOUR_USERNAME',repo='YOUR_REPO',branch='main';if(user==='YOUR_USERNAME')user=location.host.split('.')[0];if(repo==='YOUR_REPO'){var p=location.pathname.split('/').filter(Boolean);if(p.length)repo=p[0];}
+      var files = await (await fetch(`https://api.github.com/repos/${user}/${repo}/contents?ref=${branch}`)).json();
+      for(let f of files.filter(f=>f.type==='file'&&/\.(geojson?|json)$/i.test(f.name))){let data=await(await fetch(`https://raw.githubusercontent.com/${user}/${repo}/${branch}/${f.name}`)).json();let feats=data.features&&Array.isArray(data.features)?data.features:Array.isArray(data)?data:[];feats.forEach(feat=>{let g=feat.geometry&&feat.geometry.type;if(g&&/Line/.test(g))feat.properties&&feat.properties.diameter?existingLayer.addData(feat):newLayer.addData(feat);else if(g==='Point'){let n=feat.properties&&feat.properties.name||'';if(n.includes('WS'))wsLayer.addData(feat);else if(n.includes('WTP'))wtpLayer.addData(feat);}});}      
 
-    // Load features from GitHub
-    var user='YOUR_USERNAME',repo='YOUR_REPO',branch='main';if(user==='YOUR_USERNAME')user=location.host.split('.')[0];if(repo==='YOUR_REPO'){var p=location.pathname.split('/').filter(Boolean);if(p.length)repo=p[0];}
-    var files = await (await fetch(`https://api.github.com/repos/${user}/${repo}/contents?ref=${branch}`)).json();
-    for(let f of files.filter(f=>f.type==='file'&&/\.(geojson?|json)$/i.test(f.name))){
-      let data = await (await fetch(`https://raw.githubusercontent.com/${user}/${repo}/${branch}/${f.name}`)).json();
-      let feats = data.features&&Array.isArray(data.features)?data.features:Array.isArray(data)?data:[];
-      feats.forEach(feat=>{let g=feat.geometry&&feat.geometry.type;if(g&&/Line/.test(g))feat.properties&&feat.properties.diameter?existingLayer.addData(feat):newLayer.addData(feat);else if(g==='Point'){let n=feat.properties&&feat.properties.name||'';if(n.includes('WS'))wsLayer.addData(feat);else if(n.includes('WTP'))wtpLayer.addData(feat);}});
-    }
+      // Search control top-left
+      var allPts = L.featureGroup([wsLayer, wtpLayer]);
+      var sc = new L.Control.Search({layer:allPts,propertyName:'name',collapsed:false,position:'topleft',textPlaceholder:'ស្វែងរក...',marker:false,moveToLocation:latlng=>map.setView(latlng,14)});
+      map.addControl(sc);
 
-    // Search bar top-left
-    var allPts = L.featureGroup([wsLayer, wtpLayer]);
-    var sc = new L.Control.Search({layer:allPts,propertyName:'name',collapsed:false,position:'topleft',textPlaceholder:'ស្វែងរក...',marker:false,moveToLocation:latlng=>map.setView(latlng,14)});
-    map.addControl(sc);
-
-    // Legend
-    var legend = L.control({position:'bottomright'});
-    legend.onAdd = ()=>{var d=L.DomUtil.create('div','legend');d.innerHTML='<div class="legend-item"><i style="background:black"></i> បណ្តាញទុយោបច្ចុប្បន្ន</div>'+'<div class="legend-item"><i style="background:white"></i> បណ្តាញទុយោពង្រីក</div>'+'<div class="legend-item"><i class="circle" style="background:#3498db"></i> ទីតាំងប្រភពទឹក</div>'+'<div class="legend-item"><i class="circle" style="background:#f1c40f"></i> ទីតាំងស្ថានីយទឹកស្អាត</div>';return d;};legend.addTo(map);
-  })();
+      // Legend
+      var legend = L.control({position:'bottomright'});
+      legend.onAdd = ()=>{var d=L.DomUtil.create('div','legend');d.innerHTML='<div class="legend-item"><i style="background:black"></i> បណ្តាញទុយោបច្ចុប្បន្ន</div>'+'<div class="legend-item"><i style="background:white"></i> បណ្តាញទុយោពង្រីក</div>'+'<div class="legend-item"><i class="circle" style="background:#3498db"></i> ទីតាំងប្រភពទឹក</div>'+'<div class="legend-item"><i class="circle" style="background:#f1c40f"></i> ទីតាំងស្ថានីយទឹកស្អាត</div>';return d;};
+      legend.addTo(map);
+    })();
   </script>
 </body>
 </html>
