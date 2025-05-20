@@ -100,9 +100,29 @@
       var files = await (await fetch(`https://api.github.com/repos/${user}/${repo}/contents?ref=${branch}`)).json();
       for(let f of files.filter(f=>f.type==='file'&&/\.(geojson?|json)$/i.test(f.name))){let data=await(await fetch(`https://raw.githubusercontent.com/${user}/${repo}/${branch}/${f.name}`)).json();let feats=data.features&&Array.isArray(data.features)?data.features:Array.isArray(data)?data:[];feats.forEach(feat=>{let g=feat.geometry&&feat.geometry.type;if(g&&/Line/.test(g))feat.properties&&feat.properties.diameter?existingLayer.addData(feat):newLayer.addData(feat);else if(g==='Point'){let n=feat.properties&&feat.properties.name||'';if(n.includes('WS'))wsLayer.addData(feat);else if(n.includes('WTP'))wtpLayer.addData(feat);}});}      
 
-      // Search control top-left
+            // Search control top-left
       var allPts = L.featureGroup([wsLayer, wtpLayer]);
-      var sc = new L.Control.Search({layer:allPts,propertyName:'name',collapsed:false,position:'topleft',textPlaceholder:'ស្វែងរក...',marker:false,moveToLocation:latlng=>map.setView(latlng,14)});
+      var sc = new L.Control.Search({
+        layer: allPts,
+        propertyName: 'name',
+        collapsed: false,
+        position: 'topleft',
+        textPlaceholder: 'ស្វែងរក...',
+        marker: false,
+        moveToLocation: function(latlng) { map.setView(latlng, 14); },
+        // Enable partial matching anywhere in the string
+        filterData: function(text, records) {
+          var filtered = [];
+          var lower = text.toLowerCase();
+          records.forEach(function(rec) {
+            var name = rec.layer.feature.properties.name || '';
+            if (name.toLowerCase().indexOf(lower) !== -1) {
+              filtered.push(rec);
+            }
+          });
+          return filtered;
+        }
+      });
       map.addControl(sc);
 
       // Legend
