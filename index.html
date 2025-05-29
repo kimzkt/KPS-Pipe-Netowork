@@ -41,7 +41,7 @@
         padding: 20px;
         border-radius: 8px;
         box-shadow: 0 0 10px rgba(0,0,0,0.2);
-        text-align: center;
+        text-align: center; /* Centering text within the spinner box */
     }
     #loading-spinner .spinner {
         border: 4px solid #f3f3f3;
@@ -50,11 +50,33 @@
         width: 40px;
         height: 40px;
         animation: spin 2s linear infinite;
-        margin: 0 auto 10px;
+        margin: 0 auto 10px; /* Center spinner horizontally */
     }
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
+    }
+
+    /* Popup table styling for better readability */
+    .leaflet-popup-content table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        margin-top: 5px;
+    }
+    .leaflet-popup-content table th,
+    .leaflet-popup-content table td {
+        padding: 4px 6px;
+        border-bottom: 1px solid #eee;
+        text-align: left;
+    }
+    .leaflet-popup-content table th {
+        font-weight: bold;
+        white-space: nowrap;
+    }
+    .leaflet-popup-content table tr:last-child th,
+    .leaflet-popup-content table tr:last-child td {
+        border-bottom: none;
     }
   </style>
 </head>
@@ -86,22 +108,21 @@
   <script src="https://unpkg.com/leaflet-sidebar-v2/js/leaflet-sidebar.min.js"></script>
   <script src="https://unpkg.com/leaflet-search/dist/leaflet-search.min.js"></script>
   <script src="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.js"></script>
-
   <script>
     // Configuration Object
     const config = {
         mapCenter: [11.4, 104.5],
         initialZoom: 10,
         github: {
-            username: 'YOUR_GITHUB_USERNAME', // <--- REPLACE THIS
-            repo: 'YOUR_GITHUB_REPO_NAME',    // <--- REPLACE THIS
+            username: 'YOUR_GITHUB_USERNAME', // <--- REPLACE THIS WITH YOUR GITHUB USERNAME
+            repo: 'YOUR_GITHUB_REPO_NAME',    // <--- REPLACE THIS WITH YOUR GITHUB REPOSITORY NAME
             branch: 'main'
         },
         layerStyles: {
-            existingPipe: { color: 'black', weight: 2 },
-            newPipe: { color: 'white', weight: 2 },
-            waterSource: { radius: 6, fillColor: '#3498db', color: '#2980b9', fillOpacity: 0.8 },
-            waterTreatmentPlant: { radius: 6, fillColor: '#f1c40f', color: '#d4ac0d', fillOpacity: 0.8 }
+            existingPipe: { color: '#444', weight: 2 }, // Slightly softer black
+            newPipe: { color: '#ccc', weight: 2 },      // Softer white/light grey
+            waterSource: { radius: 6, fillColor: '#3498db', color: '#2980b9', fillOpacity: 0.8, weight: 1 },
+            waterTreatmentPlant: { radius: 6, fillColor: '#f1c40f', color: '#d4ac0d', fillOpacity: 0.8, weight: 1 }
         },
         attribution: {
             osm: '© OpenStreetMap contributors',
@@ -153,9 +174,11 @@
      */
     function addMapControls() {
         L.control.zoom({ position: 'topright' }).addTo(map);
+
+        // Standard Leaflet Scale Control
         L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
 
-        // Custom Scale Denominator Control
+        // Custom Scale Denominator Control (placed just below the standard scale)
         const ScaleDen = L.Control.extend({
             options: { position: 'bottomleft' },
             onAdd: function(mapInstance) {
@@ -177,9 +200,27 @@
         L.control.scaleDenominator = (opts) => new ScaleDen(opts);
         L.control.scaleDenominator({ position: 'bottomleft' }).addTo(map);
 
+
         L.control.locate({
             position: 'topright',
-            strings: { title: 'ស្វែងរកទីតាំង​របស់ខ្ញុំ' }
+            strings: { title: 'ស្វែងរកទីតាំង​របស់ខ្ញុំ' },
+            drawCircle: true,
+            follow: true, // Keep following the user's location
+            setView: 'untilPan', // Only set view at the beginning or if user moves far
+            // Other options: 'untilPan' (default), 'always', 'once'
+            markerStyle: { // Style the user's location marker
+                fillColor: '#1a73e8',
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            },
+            circleStyle: { // Style the accuracy circle
+                color: '#1a73e8',
+                fillColor: '#1a73e8',
+                fillOpacity: 0.1,
+                weight: 1
+            }
         }).addTo(map);
     }
 
@@ -195,6 +236,7 @@
      * Creates and adds GeoJSON layers to the map.
      */
     function createGeoJSONLayers() {
+        // Initialize layers without adding to map immediately to control Z-index
         existingLayer = L.geoJSON(null, {
             style: config.layerStyles.existingPipe,
             onEachFeature: (feature, layer) => {
@@ -203,7 +245,7 @@
                 const material = feature.properties.material ? `<br>Material: ${feature.properties.material}` : '';
                 layer.bindPopup(`<b>Pipe Code:</b> ${pipeCode}${diameter}${material}`);
             }
-        }).addTo(map);
+        });
 
         newLayer = L.geoJSON(null, {
             style: config.layerStyles.newPipe,
@@ -213,38 +255,56 @@
                 const material = feature.properties.material ? `<br>Material: ${feature.properties.material}` : '';
                 layer.bindPopup(`<b>Pipe Code:</b> ${pipeCode}${diameter}${material}`);
             }
-        }).addTo(map);
+        });
 
         wsLayer = L.geoJSON(null, {
             pointToLayer: (feature, latlng) => L.circleMarker(latlng, config.layerStyles.waterSource),
             onEachFeature: (feature, layer) => {
                 const properties = feature.properties || {};
-                let html = '<table>';
+                let html = '';
+                const name = properties.name || 'Unnamed Water Source';
+                if (name) {
+                    html += `<b>${name}</b><br>`; // Highlight name
+                }
+                
+                html += '<table>';
                 for (const key in properties) {
-                    // Exclude geometry-related internal properties if any
-                    if (properties.hasOwnProperty(key) && typeof properties[key] !== 'object') {
+                    // Exclude properties already displayed or internal IDs, and objects
+                    if (properties.hasOwnProperty(key) && typeof properties[key] !== 'object' && key !== 'name') {
                         html += `<tr><th>${key}</th><td>${properties[key]}</td></tr>`;
                     }
                 }
                 html += '</table>';
                 layer.bindPopup(html);
             }
-        }).addTo(map);
+        });
 
         wtpLayer = L.geoJSON(null, {
             pointToLayer: (feature, latlng) => L.circleMarker(latlng, config.layerStyles.waterTreatmentPlant),
             onEachFeature: (feature, layer) => {
                 const properties = feature.properties || {};
-                let html = '<table>';
+                let html = '';
+                const name = properties.name || 'Unnamed Water Treatment Plant';
+                if (name) {
+                    html += `<b>${name}</b><br>`; // Highlight name
+                }
+
+                html += '<table>';
                 for (const key in properties) {
-                     if (properties.hasOwnProperty(key) && typeof properties[key] !== 'object') {
+                     if (properties.hasOwnProperty(key) && typeof properties[key] !== 'object' && key !== 'name') {
                         html += `<tr><th>${key}</th><td>${properties[key]}</td></tr>`;
                     }
                 }
                 html += '</table>';
                 layer.bindPopup(html);
             }
-        }).addTo(map);
+        });
+
+        // Add layers to map in desired Z-order (lines then points)
+        existingLayer.addTo(map);
+        newLayer.addTo(map);
+        wsLayer.addTo(map);
+        wtpLayer.addTo(map);
     }
 
     /**
@@ -362,9 +422,9 @@
                         }
                     } else if (geometryType === 'Point') {
                         const name = properties.name || '';
-                        if (name.includes('WS')) {
+                        if (name.includes('WS')) { // Assumes 'WS' in name for Water Source
                             wsLayer.addData(feature);
-                        } else if (name.includes('WTP')) {
+                        } else if (name.includes('WTP')) { // Assumes 'WTP' in name for Water Treatment Plant
                             wtpLayer.addData(feature);
                         }
                     }
@@ -382,7 +442,8 @@
      * Sets up the search control for point features.
      */
     function setupSearchControl() {
-        allPointFeatures = L.featureGroup([wsLayer, wtpLayer]); // Group all searchable points
+        // Group all searchable points after they've been loaded
+        allPointFeatures = L.featureGroup([wsLayer, wtpLayer]);
 
         const searchControl = new L.Control.Search({
             layer: allPointFeatures,
@@ -402,6 +463,11 @@
 
         map.addControl(searchControl);
         document.getElementById('search-control').appendChild(searchControl.getContainer());
+
+        // Add an event listener for when no results are found
+        searchControl.on('search:emptylocation', function(e) {
+            alert('No matching location found for: "' + e.text + '"');
+        });
     }
 
     /**
@@ -428,9 +494,9 @@
         initializeMap();
         addMapControls();
         setupSidebar();
-        createGeoJSONLayers();
+        createGeoJSONLayers(); // Initialize layers, but they are added to map here
         populateLayerList();
-        await loadGeojsonData(); // Wait for data to load before setting up search
+        await loadGeojsonData(); // Wait for data to load
         setupSearchControl(); // Set up search after data is loaded and layers are populated
         createLegend();
     });
