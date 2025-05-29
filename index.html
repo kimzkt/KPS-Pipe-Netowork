@@ -120,7 +120,7 @@
         },
         layerStyles: {
             existingPipe: { color: '#444', weight: 2 }, // Slightly softer black
-            newPipe: { color: '#ccc', weight: 2 },      // Softer white/light grey
+            newPipe: { color: 'white', weight: 2 },     // Reverted to white as requested
             waterSource: { radius: 6, fillColor: '#3498db', color: '#2980b9', fillOpacity: 0.8, weight: 1 },
             waterTreatmentPlant: { radius: 6, fillColor: '#f1c40f', color: '#d4ac0d', fillOpacity: 0.8, weight: 1 }
         },
@@ -266,7 +266,7 @@
                 if (name) {
                     html += `<b>${name}</b><br>`; // Highlight name
                 }
-                
+
                 html += '<table>';
                 for (const key in properties) {
                     // Exclude properties already displayed or internal IDs, and objects
@@ -494,7 +494,7 @@
         initializeMap();
         addMapControls();
         setupSidebar();
-        createGeoJSONLayers(); // Initialize layers, but they are added to map here
+        createGeoJSONLayers(); // Initialize layers, and add them to map here
         populateLayerList();
         await loadGeojsonData(); // Wait for data to load
         setupSearchControl(); // Set up search after data is loaded and layers are populated
