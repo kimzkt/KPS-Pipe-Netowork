@@ -5,370 +5,435 @@
   <title>ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ២០២៥–២០២៤០</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- CSS Dependencies -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-sidebar-v2/css/leaflet-sidebar.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-search/dist/leaflet-search.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
     body { margin:0; padding:0; font-family:"Khmer OS","Noto Sans Khmer",sans-serif; }
-    #header { 
-      background:#005cbf; 
-      color:#fff; 
-      padding:12px; 
-      text-align:center; 
-      font-size:20px; 
-      position: relative;
-      z-index: 1000;
-    }
+    #header { background:#005cbf; color:#fff; padding:12px; text-align:center; font-size:20px; }
     #map { position:absolute; top:48px; bottom:0; left:0; right:0; }
     .leaflet-sidebar { width:260px !important; }
     .leaflet-sidebar.collapsed { width:50px !important; }
     .leaflet-sidebar-tabs a { width:50px; height:50px; line-height:50px; }
     .leaflet-sidebar-content { padding:8px; font-size:14px; }
-    .leaflet-sidebar-header { 
-      font-size:16px; 
-      margin-bottom:8px; 
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .layer-checkbox { margin:8px 0; display: flex; align-items: center; }
-    .layer-checkbox input { margin-right: 8px; }
+    .leaflet-sidebar-header { font-size:16px; margin-bottom:8px; }
+    .layer-checkbox { margin:4px 0; }
     #search-control .leaflet-search-wrap { display:flex; width:100% !important; margin-bottom:10px; }
     #search-control .leaflet-search-input { flex:1; padding:6px; font-size:16px; border-radius:4px; }
-    .legend { 
-      position:absolute; 
-      bottom:20px; 
-      right:10px; 
-      background:rgba(255,255,255,0.9); 
-      padding:12px; 
-      font-size:14px; 
-      border-radius:4px; 
-      box-shadow:0 0 8px rgba(0,0,0,0.3); 
-      width:280px; 
-      z-index: 500;
+    #search-control .leaflet-search-button { margin-left:-32px; width:24px; height:24px; }
+    .legend { position:absolute; bottom:20px; right:10px; background:#fff; padding:8px; font-size:14px; border-radius:4px; box-shadow:0 0 6px rgba(0,0,0,0.3); width:260px; }
+    .legend-item { display:flex; align-items:center; margin-bottom:6px; white-space:nowrap; }
+    .legend-item:last-child { margin-bottom:0; }
+    .legend i { width:18px; height:18px; margin-right:8px; border:1px solid #000; }
+    .legend i.circle { border-radius:50%; }
+    .leaflet-control-scale-denominator { background:#fff; padding:4px 6px; font-size:12px; border:1px solid rgba(0,0,0,0.2); border-radius:4px; margin-top:4px; }
+    /* Loading Spinner Styles */
+    #loading-spinner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+        display: none; /* Hidden by default */
+        background: rgba(255, 255, 255, 0.8);
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        text-align: center;
     }
-    .legend-item { display:flex; align-items:center; margin-bottom:8px; }
-    .legend-color { 
-      width:24px; 
-      height:24px; 
-      margin-right:10px; 
-      border:1px solid #333;
-      display: inline-block;
+    #loading-spinner .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 2s linear infinite;
+        margin: 0 auto 10px;
     }
-    .legend-color.circle { border-radius:50%; }
-    .leaflet-control-scale-denominator { 
-      background:rgba(255,255,255,0.8); 
-      padding:4px 8px; 
-      font-size:13px; 
-      border:1px solid rgba(0,0,0,0.2); 
-      border-radius:4px; 
-      margin-top:4px; 
-    }
-    .sidebar-close-btn { 
-      background: none; 
-      border: none; 
-      cursor: pointer; 
-      font-size: 16px;
-      color: #555;
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
   <div id="header">ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ២០២៥–២០២៤០</div>
-  
-  <div id="sidebar" class="leaflet-sidebar">
+  <div id="sidebar" class="leaflet-sidebar collapsed">
     <div class="leaflet-sidebar-tabs"><ul role="tablist">
-      <li><a href="#layers" role="tab"><i class="fas fa-layer-group"></i></a></li>
-      <li><a href="#searchpane" role="tab"><i class="fas fa-search"></i></a></li>
+      <li><a href="#layers" role="tab"><i class="fa fa-list"></i></a></li>
+      <li><a href="#searchpane" role="tab"><i class="fa fa-search"></i></a></li>
     </ul></div>
     <div class="leaflet-sidebar-content">
       <div id="layers" class="leaflet-sidebar-pane">
-        <h1 class="leaflet-sidebar-header">
-          ស្រទាប់
-          <button class="sidebar-close-btn"><i class="fas fa-times"></i></button>
-        </h1>
+        <h1 class="leaflet-sidebar-header">ស្រទាប់<button class="leaflet-sidebar-close"><i class="fa fa-chevron-right"></i></button></h1>
         <div id="layer-list"></div>
       </div>
       <div id="searchpane" class="leaflet-sidebar-pane">
-        <h1 class="leaflet-sidebar-header">
-          ស្វែងរក
-          <button class="sidebar-close-btn"><i class="fas fa-times"></i></button>
-        </h1>
+        <h1 class="leaflet-sidebar-header">ស្វែងរក<button class="leaflet-sidebar-close"><i class="fa fa-chevron-right"></i></button></h1>
         <div id="search-control"></div>
       </div>
     </div>
   </div>
-  
   <div id="map"></div>
-  
-  <div class="legend">
-    <h3 style="margin-top:0; border-bottom:1px solid #ddd; padding-bottom:5px;">សញ្ញាណ</h3>
-    <div class="legend-item">
-      <span class="legend-color" style="background:black;"></span> បណ្តាញទុយោបច្ចុប្បន្ន
-    </div>
-    <div class="legend-item">
-      <span class="legend-color" style="background:white;"></span> បណ្តាញទុយោពង្រីក
-    </div>
-    <div class="legend-item">
-      <span class="legend-color circle" style="background:#3498db;"></span> ទីតាំងប្រភពទឹក
-    </div>
-    <div class="legend-item">
-      <span class="legend-color circle" style="background:#f1c40f;"></span> ទីតាំងស្ថានីយទឹកស្អាត
-    </div>
+  <div id="loading-spinner">
+    <div class="spinner"></div>
+    <div>កំពុងផ្ទុកទិន្នន័យ...</div>
   </div>
 
-  <!-- JS Dependencies -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-sidebar-v2/js/leaflet-sidebar.min.js"></script>
   <script src="https://unpkg.com/leaflet-search/dist/leaflet-search.min.js"></script>
   <script src="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-  
+
   <script>
-    (async function() {
-      // Initialize map
-      var map = L.map('map', {
-        zoomControl: false,
-        attributionControl: false
-      }).setView([11.4, 104.5], 10);
-      
-      // Add base layers
-      var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: 19
-      }).addTo(map);
-      
-      var esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: '&copy; Esri',
-        maxZoom: 19
-      });
-      
-      // Layer control
-      var baseLayers = {
-        'ផែនទីផ្លូវ': osm,
-        'ផែនទីផ្កាយ': esri
-      };
-      L.control.layers(baseLayers).addTo(map);
-      
-      // Map controls
-      L.control.zoom({ position: 'topright' }).addTo(map);
-      L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
-      
-      // Custom scale denominator control
-      var ScaleDen = L.Control.extend({
-        options: { position: 'bottomleft' },
-        onAdd: function(map) {
-          this._div = L.DomUtil.create('div', 'leaflet-control-scale-denominator');
-          map.on('zoomend moveend', this._update, this);
-          this._update();
-          return this._div;
+    // Configuration Object
+    const config = {
+        mapCenter: [11.4, 104.5],
+        initialZoom: 10,
+        github: {
+            username: 'YOUR_GITHUB_USERNAME', // <--- REPLACE THIS
+            repo: 'YOUR_GITHUB_REPO_NAME',    // <--- REPLACE THIS
+            branch: 'main'
         },
-        _update: function() {
-          var lat = map.getCenter().lat;
-          var z = map.getZoom();
-          var mpp = 156543.0339 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);
-          var scale = mpp * 96 / 0.0254;
-          this._div.innerHTML = 'ទំហំ៖ 1:' + Math.round(scale).toLocaleString('km');
-        }
-      });
-      new ScaleDen().addTo(map);
-      
-      // Locate control
-      L.control.locate({
-        position: 'topright',
-        strings: {
-          title: 'ស្វែងរកទីតាំង​របស់ខ្ញុំ'
-        }
-      }).addTo(map);
-      
-      // Sidebar control
-      var sidebar = L.control.sidebar({
-        container: 'sidebar',
-        autopan: true,
-        position: 'left'
-      }).addTo(map);
-      sidebar.open('layers');
-      
-      // Layer initialization
-      var existingLayer = L.geoJSON(null, {
-        style: { color: 'black', weight: 3 },
-        onEachFeature: function(feature, layer) {
-          var props = feature.properties || {};
-          var content = '<div class="popup-content">';
-          for (var key in props) {
-            content += '<p><strong>' + key + ':</strong> ' + props[key] + '</p>';
-          }
-          content += '</div>';
-          layer.bindPopup(content);
-        }
-      }).addTo(map);
-      
-      var newLayer = L.geoJSON(null, {
-        style: { color: 'white', weight: 3, dashArray: '5, 10' },
-        onEachFeature: function(feature, layer) {
-          var props = feature.properties || {};
-          var content = '<div class="popup-content">';
-          for (var key in props) {
-            content += '<p><strong>' + key + ':</strong> ' + props[key] + '</p>';
-          }
-          content += '</div>';
-          layer.bindPopup(content);
-        }
-      }).addTo(map);
-      
-      var wsLayer = L.geoJSON(null, {
-        pointToLayer: function(feature, latlng) {
-          return L.circleMarker(latlng, {
-            radius: 8,
-            fillColor: '#3498db',
-            color: '#2980b9',
-            weight: 2,
-            fillOpacity: 0.9
-          });
+        layerStyles: {
+            existingPipe: { color: 'black', weight: 2 },
+            newPipe: { color: 'white', weight: 2 },
+            waterSource: { radius: 6, fillColor: '#3498db', color: '#2980b9', fillOpacity: 0.8 },
+            waterTreatmentPlant: { radius: 6, fillColor: '#f1c40f', color: '#d4ac0d', fillOpacity: 0.8 }
         },
-        onEachFeature: function(feature, layer) {
-          var props = feature.properties || {};
-          var content = '<div class="popup-content"><h4>ប្រភពទឹក</h4>';
-          for (var key in props) {
-            content += '<p><strong>' + key + ':</strong> ' + props[key] + '</p>';
-          }
-          content += '</div>';
-          layer.bindPopup(content);
-        }
-      }).addTo(map);
-      
-      var wtpLayer = L.geoJSON(null, {
-        pointToLayer: function(feature, latlng) {
-          return L.circleMarker(latlng, {
-            radius: 8,
-            fillColor: '#f1c40f',
-            color: '#d4ac0d',
-            weight: 2,
-            fillOpacity: 0.9
-          });
+        attribution: {
+            osm: '© OpenStreetMap contributors',
+            esri: '© Esri, Maxar, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AeroGRID, IGN, and the GIS User Community'
         },
-        onEachFeature: function(feature, layer) {
-          var props = feature.properties || {};
-          var content = '<div class="popup-content"><h4>ស្ថានីយទឹកស្អាត</h4>';
-          for (var key in props) {
-            content += '<p><strong>' + key + ':</strong> ' + props[key] + '</p>';
-          }
-          content += '</div>';
-          layer.bindPopup(content);
-        }
-      }).addTo(map);
-      
-      // Layer control UI
-      var overlays = {
-        'បណ្តាញទុយោបច្ចុប្បន្ន': existingLayer,
-        'បណ្តាញទុយោពង្រីក': newLayer,
-        'ទីតាំងប្រភពទឹក': wsLayer,
-        'ទីតាំងស្ថានីយទឹកស្អាត': wtpLayer
-      };
-      
-      var layerList = document.getElementById('layer-list');
-      Object.keys(overlays).forEach(function(name) {
-        var container = document.createElement('div');
-        container.className = 'layer-checkbox';
-        
-        var checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = true;
-        checkbox.id = name.replace(/\s+/g, '-');
-        checkbox.onchange = function() {
-          if (this.checked) {
-            map.addLayer(overlays[name]);
-          } else {
-            map.removeLayer(overlays[name]);
-          }
-        };
-        
-        var label = document.createElement('label');
-        label.htmlFor = checkbox.id;
-        label.textContent = name;
-        
-        container.appendChild(checkbox);
-        container.appendChild(label);
-        layerList.appendChild(container);
-      });
-      
-      // GitHub data loading
-      var user = 'YOUR_GITHUB_USERNAME';
-      var repo = 'YOUR_REPO_NAME';
-      var branch = 'main';
-      
-      // Auto-detect GitHub Pages URL structure
-      if (user === 'YOUR_GITHUB_USERNAME') {
-        user = location.host.split('.')[0];
-      }
-      if (repo === 'YOUR_REPO_NAME') {
-        var pathParts = location.pathname.split('/').filter(Boolean);
-        repo = pathParts.length > 0 ? pathParts[0] : user;
-      }
-      
-      try {
-        // Load repository contents
-        var contents = await fetch(`https://api.github.com/repos/${user}/${repo}/contents?ref=${branch}`);
-        var files = await contents.json();
-        
-        // Process GeoJSON files
-        for (var file of files) {
-          if (file.type === 'file' && /\.geojson$/i.test(file.name)) {
-            var response = await fetch(file.download_url);
-            var geojson = await response.json();
-            
-            // Add features to appropriate layers
-            geojson.features.forEach(function(feature) {
-              if (feature.geometry) {
-                switch(feature.geometry.type) {
-                  case 'LineString':
-                  case 'MultiLineString':
-                    if (feature.properties && feature.properties.status === 'existing') {
-                      existingLayer.addData(feature);
-                    } else {
-                      newLayer.addData(feature);
-                    }
-                    break;
-                  case 'Point':
-                    if (feature.properties && /ប្រភពទឹក|WS/i.test(feature.properties.name)) {
-                      wsLayer.addData(feature);
-                    } else if (feature.properties && /ស្ថានីយទឹកស្អាត|WTP/i.test(feature.properties.name)) {
-                      wtpLayer.addData(feature);
-                    }
-                    break;
-                }
-              }
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error loading GeoJSON data:', error);
-      }
-      
-      // Search control
-      var allPoints = L.featureGroup([wsLayer, wtpLayer]);
-      var searchControl = new L.Control.Search({
-        layer: allPoints,
-        propertyName: 'name',
-        collapsed: false,
-        textPlaceholder: 'ស្វែងរកទីតាំង...',
-        marker: false,
-        moveToLocation: function(latlng, title, map) {
-          map.setView(latlng, 15);
-        }
-      });
-      map.addControl(searchControl);
-      document.getElementById('search-control').appendChild(searchControl.getContainer());
-      
-      // Close sidebar buttons
-      document.querySelectorAll('.sidebar-close-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          sidebar.close();
+    };
+
+    // Global map variables
+    let map;
+    let sidebar;
+    let existingLayer, newLayer, wsLayer, wtpLayer;
+    let allPointFeatures; // Used for search control
+
+    /**
+     * Shows the loading spinner.
+     */
+    function showLoadingSpinner() {
+        document.getElementById('loading-spinner').style.display = 'block';
+    }
+
+    /**
+     * Hides the loading spinner.
+     */
+    function hideLoadingSpinner() {
+        document.getElementById('loading-spinner').style.display = 'none';
+    }
+
+    /**
+     * Initializes the Leaflet map and base layers.
+     */
+    function initializeMap() {
+        map = L.map('map', { zoomControl: false }).setView(config.mapCenter, config.initialZoom);
+
+        const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: config.attribution.osm,
+            maxZoom: 19
+        }).addTo(map);
+
+        const esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: config.attribution.esri,
+            maxZoom: 19
         });
-      });
-    })();
+
+        L.control.layers({ 'Street': osm, 'Satellite': esri }).addTo(map);
+    }
+
+    /**
+     * Adds various controls to the map.
+     */
+    function addMapControls() {
+        L.control.zoom({ position: 'topright' }).addTo(map);
+        L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
+
+        // Custom Scale Denominator Control
+        const ScaleDen = L.Control.extend({
+            options: { position: 'bottomleft' },
+            onAdd: function(mapInstance) {
+                this._div = L.DomUtil.create('div', 'leaflet-control-scale-denominator');
+                mapInstance.on('zoomend moveend', this._updateScaleDenominator, this);
+                this._updateScaleDenominator();
+                return this._div;
+            },
+            _updateScaleDenominator: function() {
+                const lat = map.getCenter().lat;
+                const z = map.getZoom();
+                // meters per pixel at current latitude and zoom level
+                const mpp = 156543.0339 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);
+                // Calculate map scale (assuming 96 DPI, 0.0254 meters per inch)
+                const scale = mpp * 96 / 0.0254;
+                this._div.innerHTML = 'ទំហំ៖ 1:' + Math.round(scale).toLocaleString();
+            }
+        });
+        L.control.scaleDenominator = (opts) => new ScaleDen(opts);
+        L.control.scaleDenominator({ position: 'bottomleft' }).addTo(map);
+
+        L.control.locate({
+            position: 'topright',
+            strings: { title: 'ស្វែងរកទីតាំង​របស់ខ្ញុំ' }
+        }).addTo(map);
+    }
+
+    /**
+     * Sets up the sidebar.
+     */
+    function setupSidebar() {
+        sidebar = L.control.sidebar({ container: 'sidebar', autopan: true }).addTo(map);
+        sidebar.open('layers');
+    }
+
+    /**
+     * Creates and adds GeoJSON layers to the map.
+     */
+    function createGeoJSONLayers() {
+        existingLayer = L.geoJSON(null, {
+            style: config.layerStyles.existingPipe,
+            onEachFeature: (feature, layer) => {
+                const pipeCode = feature.properties.pipe_code || 'N/A';
+                const diameter = feature.properties.diameter ? ` (${feature.properties.diameter}mm)` : '';
+                const material = feature.properties.material ? `<br>Material: ${feature.properties.material}` : '';
+                layer.bindPopup(`<b>Pipe Code:</b> ${pipeCode}${diameter}${material}`);
+            }
+        }).addTo(map);
+
+        newLayer = L.geoJSON(null, {
+            style: config.layerStyles.newPipe,
+            onEachFeature: (feature, layer) => {
+                const pipeCode = feature.properties.pipe_code || 'N/A';
+                const diameter = feature.properties.diameter ? ` (${feature.properties.diameter}mm)` : '';
+                const material = feature.properties.material ? `<br>Material: ${feature.properties.material}` : '';
+                layer.bindPopup(`<b>Pipe Code:</b> ${pipeCode}${diameter}${material}`);
+            }
+        }).addTo(map);
+
+        wsLayer = L.geoJSON(null, {
+            pointToLayer: (feature, latlng) => L.circleMarker(latlng, config.layerStyles.waterSource),
+            onEachFeature: (feature, layer) => {
+                const properties = feature.properties || {};
+                let html = '<table>';
+                for (const key in properties) {
+                    // Exclude geometry-related internal properties if any
+                    if (properties.hasOwnProperty(key) && typeof properties[key] !== 'object') {
+                        html += `<tr><th>${key}</th><td>${properties[key]}</td></tr>`;
+                    }
+                }
+                html += '</table>';
+                layer.bindPopup(html);
+            }
+        }).addTo(map);
+
+        wtpLayer = L.geoJSON(null, {
+            pointToLayer: (feature, latlng) => L.circleMarker(latlng, config.layerStyles.waterTreatmentPlant),
+            onEachFeature: (feature, layer) => {
+                const properties = feature.properties || {};
+                let html = '<table>';
+                for (const key in properties) {
+                     if (properties.hasOwnProperty(key) && typeof properties[key] !== 'object') {
+                        html += `<tr><th>${key}</th><td>${properties[key]}</td></tr>`;
+                    }
+                }
+                html += '</table>';
+                layer.bindPopup(html);
+            }
+        }).addTo(map);
+    }
+
+    /**
+     * Populates the layer list in the sidebar.
+     */
+    function populateLayerList() {
+        const overlays = {
+            'បណ្តាញទុយោបច្ចុប្បន្ន': existingLayer,
+            'បណ្តាញទុយោពង្រីក': newLayer,
+            'ទីតាំងប្រភពទឹក': wsLayer,
+            'ទីតាំងស្ថានីយទឹកស្អាត': wtpLayer
+        };
+
+        const list = document.getElementById('layer-list');
+        Object.keys(overlays).forEach(name => {
+            const div = document.createElement('div');
+            div.className = 'layer-checkbox';
+
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.checked = true; // Layers are added by default
+            input.id = `layer-${name.replace(/\s/g, '-')}`; // Unique ID
+            input.onchange = () => {
+                if (input.checked) {
+                    map.addLayer(overlays[name]);
+                } else {
+                    map.removeLayer(overlays[name]);
+                }
+            };
+
+            const label = document.createElement('label');
+            label.htmlFor = input.id;
+            label.innerText = name;
+
+            div.appendChild(input);
+            div.appendChild(label);
+            list.appendChild(div);
+        });
+    }
+
+    /**
+     * Loads GeoJSON data from GitHub.
+     * @returns {Promise<void>}
+     */
+    async function loadGeojsonData() {
+        showLoadingSpinner();
+        const { username, repo, branch } = config.github;
+        let effectiveUser = username;
+        let effectiveRepo = repo;
+
+        // Attempt to infer user/repo from URL if placeholders are still present
+        if (username === 'YOUR_GITHUB_USERNAME' || repo === 'YOUR_GITHUB_REPO_NAME') {
+            try {
+                const urlPathParts = location.pathname.split('/').filter(Boolean);
+                if (location.host.includes('github.io')) {
+                     effectiveUser = location.host.split('.')[0];
+                     if (urlPathParts.length > 0) {
+                         effectiveRepo = urlPathParts[0];
+                     } else {
+                         effectiveRepo = effectiveUser; // default for user pages
+                     }
+                } else if (urlPathParts.length >= 2) {
+                    // Assuming format like /<user>/<repo>/... for local serving
+                    effectiveUser = urlPathParts[0];
+                    effectiveRepo = urlPathParts[1];
+                }
+            } catch (e) {
+                console.warn("Could not infer GitHub user/repo from URL, using placeholders if not replaced.", e);
+            }
+        }
+
+        if (effectiveUser === 'YOUR_GITHUB_USERNAME' || effectiveRepo === 'YOUR_GITHUB_REPO_NAME') {
+            console.error("GitHub username or repository name is still a placeholder. Please update 'config.github' in the script.");
+            alert("Configuration Error: Please update your GitHub username and repository name in the script to load data.");
+            hideLoadingSpinner();
+            return;
+        }
+
+        try {
+            const response = await fetch(`https://api.github.com/repos/${effectiveUser}/${effectiveRepo}/contents?ref=${branch}`);
+            if (!response.ok) {
+                throw new Error(`GitHub API HTTP error! status: ${response.status} - ${response.statusText}`);
+            }
+            const files = await response.json();
+
+            const geojsonFiles = files.filter(f => f.type === 'file' && /\.(geojson|json)$/i.test(f.name));
+
+            if (geojsonFiles.length === 0) {
+                console.warn("No GeoJSON files found in the repository.");
+                hideLoadingSpinner();
+                return;
+            }
+
+            for (const file of geojsonFiles) {
+                const dataResponse = await fetch(`https://raw.githubusercontent.com/${effectiveUser}/${effectiveRepo}/${branch}/${file.name}`);
+                if (!dataResponse.ok) {
+                    console.warn(`Failed to load data from ${file.name}: ${dataResponse.status} ${dataResponse.statusText}`);
+                    continue;
+                }
+                const data = await dataResponse.json();
+
+                const features = data.features && Array.isArray(data.features) ? data.features : Array.isArray(data) ? data : [];
+
+                features.forEach(feature => {
+                    const geometryType = feature.geometry && feature.geometry.type;
+                    const properties = feature.properties || {};
+
+                    if (geometryType && /Line/.test(geometryType)) {
+                        // Decide based on presence of 'diameter' or specific layer type property
+                        // For more robust solution, add a 'layer_type' property to your GeoJSON
+                        if (properties.diameter) {
+                            existingLayer.addData(feature);
+                        } else {
+                            newLayer.addData(feature);
+                        }
+                    } else if (geometryType === 'Point') {
+                        const name = properties.name || '';
+                        if (name.includes('WS')) {
+                            wsLayer.addData(feature);
+                        } else if (name.includes('WTP')) {
+                            wtpLayer.addData(feature);
+                        }
+                    }
+                });
+            }
+        } catch (error) {
+            console.error("Error loading GeoJSON data:", error);
+            alert(`Failed to load map data. Please check your internet connection or GitHub configuration. Error: ${error.message}`);
+        } finally {
+            hideLoadingSpinner();
+        }
+    }
+
+    /**
+     * Sets up the search control for point features.
+     */
+    function setupSearchControl() {
+        allPointFeatures = L.featureGroup([wsLayer, wtpLayer]); // Group all searchable points
+
+        const searchControl = new L.Control.Search({
+            layer: allPointFeatures,
+            propertyName: 'name', // Assuming 'name' is the property to search by
+            collapsed: false,
+            textPlaceholder: 'ស្វែងរក...',
+            marker: false, // Don't add a default marker, popups are handled by layer
+            moveToLocation: (latlng, originalLayer) => {
+                map.setView(latlng, 14); // Zoom to location
+                // Optionally, open the popup for the found feature
+                if (originalLayer && originalLayer.getPopup()) {
+                    originalLayer.openPopup();
+                }
+            },
+            initial: false // Don't start with search activated
+        });
+
+        map.addControl(searchControl);
+        document.getElementById('search-control').appendChild(searchControl.getContainer());
+    }
+
+    /**
+     * Creates and adds the legend to the map.
+     */
+    function createLegend() {
+        const legend = L.control({ position: 'bottomright' });
+
+        legend.onAdd = () => {
+            const div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = `
+                <div class="legend-item"><i style="background:${config.layerStyles.existingPipe.color}; border:1px solid black;"></i> បណ្តាញទុយោបច្ចុប្បន្ន</div>
+                <div class="legend-item"><i style="background:${config.layerStyles.newPipe.color}; border:1px solid black;"></i> បណ្តាញទុយោពង្រីក</div>
+                <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterSource.fillColor}; border-color:${config.layerStyles.waterSource.color};"></i> ទីតាំងប្រភពទឹក</div>
+                <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterTreatmentPlant.fillColor}; border-color:${config.layerStyles.waterTreatmentPlant.color};"></i> ទីតាំងស្ថានីយទឹកស្អាត</div>
+            `;
+            return div;
+        };
+        legend.addTo(map);
+    }
+
+    // Main execution flow
+    document.addEventListener('DOMContentLoaded', async () => {
+        initializeMap();
+        addMapControls();
+        setupSidebar();
+        createGeoJSONLayers();
+        populateLayerList();
+        await loadGeojsonData(); // Wait for data to load before setting up search
+        setupSearchControl(); // Set up search after data is loaded and layers are populated
+        createLegend();
+    });
   </script>
 </body>
 </html>
