@@ -82,8 +82,8 @@
     /* --- Styles for the L.Control.Search (moved to top-left) --- */
     .leaflet-control-search {
         position: absolute;
-        top: 10px; /* Adjust as needed */
-        left: 10px; /* Adjust as needed */
+        top: 10px;
+        left: 10px;
         z-index: 999;
         background: #fff;
         border-radius: 4px;
@@ -91,7 +91,7 @@
         padding: 5px;
         display: flex;
         align-items: center;
-        width: 250px; /* Fixed width for the search bar */
+        width: 250px;
     }
 
     .leaflet-control-search .search-input {
@@ -127,26 +127,22 @@
         border-radius: 4px;
     }
 
-    .leaflet-control-layers-toggle {
-        display: none !important; /* Hide the default toggle icon */
-    }
-
     /* Style the input labels to look like buttons */
     .leaflet-control-layers label {
-        display: block; /* Make each label a block to stack them */
+        display: block;
         padding: 8px 12px;
         cursor: pointer;
         font-size: 14px;
-        border-bottom: 1px solid #eee; /* Separator between options */
-        white-space: nowrap; /* Prevent text wrapping */
+        border-bottom: 1px solid #eee;
+        white-space: nowrap;
     }
 
     .leaflet-control-layers label:last-of-type {
-        border-bottom: none; /* No border on the last item */
+        border-bottom: none;
     }
 
     .leaflet-control-layers label:hover {
-        background-color: #f4f4f4; /* Subtle hover effect */
+        background-color: #f4f4f4;
     }
 
     /* Hide the radio buttons themselves, but keep them functional */
@@ -156,20 +152,9 @@
 
     /* Style for the currently selected base layer */
     .leaflet-control-layers input[type="radio"]:checked + span {
-        font-weight: bold; /* Make selected text bold */
-        color: #005cbf; /* Highlight color */
-        background-color: #e6f0ff; /* Subtle background for selected */
-    }
-
-    /* Hide the layers collapse button if we always want it open for base layers */
-    .leaflet-control-layers-expanded .leaflet-control-layers-toggle {
-        display: none;
-    }
-    .leaflet-control-layers-expanded .leaflet-control-layers-list {
-        padding: 0; /* Remove default padding from the list */
-    }
-    .leaflet-control-layers-expanded {
-        width: auto; /* Allow width to adjust to content */
+        font-weight: bold;
+        color: #005cbf;
+        background-color: #e6f0ff;
     }
 
     /* To always show the base layers without needing to click a toggle */
@@ -180,36 +165,25 @@
         display: none; /* Hide if collapsed */
     }
 
-    /* Add a custom icon for the layers control, just to show a button */
-    /* This will replace the default leaflet layers icon */
-    .leaflet-control-layers-toggle.custom-layers-button {
-        display: block !important; /* Make it visible */
-        background-image: none; /* Remove default image */
-        background-color: #fff; /* White background */
+    /* Custom button to trigger the layers control (replace default icon) */
+    .leaflet-control-layers-toggle {
+        /* This rule targets the default Leaflet layers toggle button */
+        background-image: url('image_940e33.png') !important; /* Use your image */
+        background-size: cover; /* Cover the entire area */
+        background-position: center; /* Center the image */
+        background-repeat: no-repeat;
+        width: 40px; /* Adjust size to fit your image aspect ratio */
+        height: 40px; /* Adjust size */
         border-radius: 4px;
-        width: 36px; /* Adjust size */
-        height: 36px;
-        line-height: 36px; /* Vertically align icon */
-        text-align: center;
         box-shadow: 0 1px 5px rgba(0,0,0,0.4);
         cursor: pointer;
+        /* Ensure it's not hidden by previous rules if they were too broad */
+        display: block !important;
+        background-color: #fff; /* Fallback background color */
     }
-    .leaflet-control-layers-toggle.custom-layers-button i {
-        color: #555; /* Icon color */
-        font-size: 18px;
+    .leaflet-control-layers-toggle:hover {
+        background-color: #f4f4f4; /* Subtle hover effect */
     }
-    .leaflet-control-layers-toggle.custom-layers-button:hover {
-        background-color: #f4f4f4;
-    }
-
-    /* If you want it to look like a small button that toggles a menu */
-    /* Comment out the above .leaflet-control-layers label styles if you use this */
-    /* .leaflet-control-layers-toggle.custom-layers-button {
-         position: absolute;
-         top: 10px; // Adjust as needed
-         right: 50px; // Adjust based on other controls
-    } */
-
   </style>
 </head>
 <body>
@@ -294,14 +268,11 @@
         });
 
         // Base Layers control - positioned topright
+        // Make sure the `collapsed: false` is set for it to always show the options
         L.control.layers({ 'Street': osm.addTo(map), 'Satellite': esri }, null, { position: 'topright', collapsed: false }).addTo(map);
-        // The 'collapsed: false' option makes it always open, like a button group.
-        // You might need to tweak the CSS further if you want it to look like a small square toggle.
 
-        // Optionally, add a custom class to the layers control for specific styling
-        document.querySelector('.leaflet-control-layers-toggle').classList.add('custom-layers-button');
-        document.querySelector('.leaflet-control-layers-toggle').innerHTML = '<i class="fa fa-layer-group"></i>'; // Add icon to toggle
-
+        // Remove the default Font Awesome icon assignment as we're using a background image
+        // document.querySelector('.leaflet-control-layers-toggle').innerHTML = '<i class="fa fa-layer-group"></i>';
     }
 
     /**
