@@ -22,7 +22,7 @@
     .leaflet-sidebar-header { font-size:16px; margin-bottom:8px; }
     .layer-checkbox { margin:4px 0; }
 
-    /* Search Control Styles */
+    /* Search Control Styles (for the map control, not sidebar) */
     .leaflet-control-search {
         position: absolute;
         top: 10px; /* Adjust as needed */
@@ -58,7 +58,7 @@
         color: #000;
     }
 
-    /* Hide the search pane in the sidebar if search is a map control */
+    /* Keep #searchpane hidden as the search control is now directly on the map */
     #searchpane {
         display: none;
     }
@@ -201,20 +201,17 @@
 <body>
   <div id="header">ប្លង់បណ្តាញទុយោទឹកស្អាតខេត្តកំពង់ស្ពឺ ២០២៥–២០២៤០</div>
   <div id="sidebar" class="leaflet-sidebar collapsed">
-    <div class="leaflet-sidebar-tabs"><ul role="tablist">
-      <li><a href="#layers" role="tab"><i class="fa fa-list"></i></a></li>
-      <li><a href="#searchpane" role="tab"><i class="fa fa-search"></i></a></li>
-    </ul></div>
+    <div class="leaflet-sidebar-tabs">
+      <ul role="tablist">
+        <li><a href="#layers" role="tab"><i class="fa fa-list"></i></a></li>
+        </ul>
+    </div>
     <div class="leaflet-sidebar-content">
       <div id="layers" class="leaflet-sidebar-pane">
         <h1 class="leaflet-sidebar-header">ស្រទាប់<button class="leaflet-sidebar-close"><i class="fa fa-chevron-right"></i></button></h1>
         <div id="layer-list"></div>
       </div>
-      <div id="searchpane" class="leaflet-sidebar-pane">
-        <h1 class="leaflet-sidebar-header">ស្វែងរក<button class="leaflet-sidebar-close"><i class="fa fa-chevron-right"></i></button></h1>
-        <div id="search-control"></div>
       </div>
-    </div>
   </div>
   <div id="map"></div>
   <div id="loading-spinner">
@@ -293,7 +290,7 @@
         const layersToggle = document.querySelector('.leaflet-control-layers-toggle');
         if (layersToggle) {
             layersToggle.innerHTML = `
-                <img src="image_9402ec.png" alt="Layers Icon">
+                <img src="./image_9402ec.png" alt="Layers Icon">
                 <span>Layers</span>
             `;
         }
@@ -564,6 +561,7 @@
     function setupSearchControl() {
         allPointFeatures = L.featureGroup([wsLayer, wtpLayer]);
 
+        // The search control is now added directly to the map, not the sidebar.
         const searchControl = new L.Control.Search({
             layer: allPointFeatures,
             propertyName: 'name',
@@ -582,10 +580,6 @@
         });
 
         map.addControl(searchControl);
-
-        // It looks like the search control is intended to be a direct map control, not in the sidebar.
-        // If you still want it in the sidebar, uncomment the following line and remove the `display: none;` from #searchpane CSS.
-        // document.getElementById('search-control').appendChild(searchControl.getContainer());
 
         searchControl.on('search:emptylocation', function(e) {
             alert('No matching location found for: "' + e.text + '"');
