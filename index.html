@@ -134,7 +134,8 @@
         background-image: none !important; /* Remove any default Leaflet image */
         background-color: #fff; /* Ensure white background */
         border-radius: 4px;
-        width: auto; /* Allow width to adapt to content */
+        width: max-content; /* *** NEW: Ensures it expands to fit content *** */
+        box-sizing: border-box; /* *** NEW: Ensures padding is included in width *** */
         height: 40px; /* Fixed height for consistent button size */
         line-height: 40px; /* Vertically center content */
         cursor: pointer;
