@@ -21,7 +21,7 @@
     .leaflet-sidebar-content { padding:8px; font-size:14px; }
     .leaflet-sidebar-header { font-size:16px; margin-bottom:8px; }
     .layer-checkbox { margin:4px 0; }
-    /* Removed #search-control styling as it's no longer in sidebar */
+
     .legend { position:absolute; bottom:20px; right:10px; background:#fff; padding:8px; font-size:14px; border-radius:4px; box-shadow:0 0 6px rgba(0,0,0,0.3); width:260px; }
     .legend-item { display:flex; align-items:center; margin-bottom:6px; white-space:nowrap; }
     .legend-item:last-child { margin-bottom:0; }
@@ -79,34 +79,34 @@
         border-bottom: none;
     }
 
-    /* --- Styles for the L.Control.Search outside the sidebar --- */
+    /* --- Styles for the L.Control.Search (moved to top-left) --- */
     .leaflet-control-search {
         position: absolute;
         top: 10px; /* Adjust as needed */
         left: 10px; /* Adjust as needed */
-        z-index: 999; /* Ensure it's above the map but below other critical elements */
+        z-index: 999;
         background: #fff;
         border-radius: 4px;
         box-shadow: 0 1px 5px rgba(0,0,0,0.4);
         padding: 5px;
-        display: flex; /* Use flexbox for alignment */
-        align-items: center; /* Vertically center items */
+        display: flex;
+        align-items: center;
         width: 250px; /* Fixed width for the search bar */
     }
 
     .leaflet-control-search .search-input {
-        flex-grow: 1; /* Allow input to take available space */
+        flex-grow: 1;
         border: none;
         padding: 6px;
         font-size: 16px;
-        outline: none; /* Remove default focus outline */
+        outline: none;
     }
 
     .leaflet-control-search .search-button {
         background: none;
         border: none;
         cursor: pointer;
-        font-size: 18px; /* Adjust icon size */
+        font-size: 18px;
         padding: 0 5px;
         color: #555;
         outline: none;
@@ -119,6 +119,97 @@
     #searchpane {
         display: none;
     }
+
+    /* --- Custom Styles for L.Control.Layers to look like a button group --- */
+    .leaflet-control-layers {
+        box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+        background: #fff;
+        border-radius: 4px;
+    }
+
+    .leaflet-control-layers-toggle {
+        display: none !important; /* Hide the default toggle icon */
+    }
+
+    /* Style the input labels to look like buttons */
+    .leaflet-control-layers label {
+        display: block; /* Make each label a block to stack them */
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 14px;
+        border-bottom: 1px solid #eee; /* Separator between options */
+        white-space: nowrap; /* Prevent text wrapping */
+    }
+
+    .leaflet-control-layers label:last-of-type {
+        border-bottom: none; /* No border on the last item */
+    }
+
+    .leaflet-control-layers label:hover {
+        background-color: #f4f4f4; /* Subtle hover effect */
+    }
+
+    /* Hide the radio buttons themselves, but keep them functional */
+    .leaflet-control-layers input[type="radio"] {
+        display: none;
+    }
+
+    /* Style for the currently selected base layer */
+    .leaflet-control-layers input[type="radio"]:checked + span {
+        font-weight: bold; /* Make selected text bold */
+        color: #005cbf; /* Highlight color */
+        background-color: #e6f0ff; /* Subtle background for selected */
+    }
+
+    /* Hide the layers collapse button if we always want it open for base layers */
+    .leaflet-control-layers-expanded .leaflet-control-layers-toggle {
+        display: none;
+    }
+    .leaflet-control-layers-expanded .leaflet-control-layers-list {
+        padding: 0; /* Remove default padding from the list */
+    }
+    .leaflet-control-layers-expanded {
+        width: auto; /* Allow width to adjust to content */
+    }
+
+    /* To always show the base layers without needing to click a toggle */
+    .leaflet-control-layers.leaflet-control-layers-expanded .leaflet-control-layers-list {
+        display: block; /* Always show the list of layers */
+    }
+    .leaflet-control-layers.leaflet-control-layers-collapsed .leaflet-control-layers-list {
+        display: none; /* Hide if collapsed */
+    }
+
+    /* Add a custom icon for the layers control, just to show a button */
+    /* This will replace the default leaflet layers icon */
+    .leaflet-control-layers-toggle.custom-layers-button {
+        display: block !important; /* Make it visible */
+        background-image: none; /* Remove default image */
+        background-color: #fff; /* White background */
+        border-radius: 4px;
+        width: 36px; /* Adjust size */
+        height: 36px;
+        line-height: 36px; /* Vertically align icon */
+        text-align: center;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+        cursor: pointer;
+    }
+    .leaflet-control-layers-toggle.custom-layers-button i {
+        color: #555; /* Icon color */
+        font-size: 18px;
+    }
+    .leaflet-control-layers-toggle.custom-layers-button:hover {
+        background-color: #f4f4f4;
+    }
+
+    /* If you want it to look like a small button that toggles a menu */
+    /* Comment out the above .leaflet-control-layers label styles if you use this */
+    /* .leaflet-control-layers-toggle.custom-layers-button {
+         position: absolute;
+         top: 10px; // Adjust as needed
+         right: 50px; // Adjust based on other controls
+    } */
+
   </style>
 </head>
 <body>
@@ -195,14 +286,22 @@
         const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: config.attribution.osm,
             maxZoom: 19
-        }).addTo(map);
+        });
 
         const esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: config.attribution.esri,
             maxZoom: 19
         });
 
-        L.control.layers({ 'Street': osm, 'Satellite': esri }).addTo(map);
+        // Base Layers control - positioned topright
+        L.control.layers({ 'Street': osm.addTo(map), 'Satellite': esri }, null, { position: 'topright', collapsed: false }).addTo(map);
+        // The 'collapsed: false' option makes it always open, like a button group.
+        // You might need to tweak the CSS further if you want it to look like a small square toggle.
+
+        // Optionally, add a custom class to the layers control for specific styling
+        document.querySelector('.leaflet-control-layers-toggle').classList.add('custom-layers-button');
+        document.querySelector('.leaflet-control-layers-toggle').innerHTML = '<i class="fa fa-layer-group"></i>'; // Add icon to toggle
+
     }
 
     /**
@@ -226,9 +325,7 @@
             _updateScaleDenominator: function() {
                 const lat = map.getCenter().lat;
                 const z = map.getZoom();
-                // meters per pixel at current latitude and zoom level
                 const mpp = 156543.0339 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);
-                // Calculate map scale (assuming 96 DPI, 0.0254 meters per inch)
                 const scale = mpp * 96 / 0.0254;
                 this._div.innerHTML = 'ទំហំ៖ 1:' + Math.round(scale).toLocaleString();
             }
@@ -472,14 +569,12 @@
     function setupSearchControl() {
         allPointFeatures = L.featureGroup([wsLayer, wtpLayer]);
 
-        // Initialize L.Control.Search directly on the map, no longer tied to sidebar div
         const searchControl = new L.Control.Search({
             layer: allPointFeatures,
             propertyName: 'name',
-            collapsed: false, // Keep it open by default like in the image
+            collapsed: false,
             textPlaceholder: 'ស្វែងរក...',
             marker: false,
-            // Customizing the input and button classes for CSS styling
             inputClasses: 'search-input',
             buttonClasses: 'search-button',
             moveToLocation: (latlng, originalLayer) => {
@@ -491,10 +586,8 @@
             initial: false
         });
 
-        // Add the search control to the map
         map.addControl(searchControl);
 
-        // Add an event listener for when no results are found
         searchControl.on('search:emptylocation', function(e) {
             alert('No matching location found for: "' + e.text + '"');
         });
@@ -522,12 +615,12 @@
     // Main execution flow
     document.addEventListener('DOMContentLoaded', async () => {
         initializeMap();
-        addMapControls();
+        addMapControls(); // This now handles zoom, scale, locate, and the new basemap control setup
         setupSidebar(); // Keep sidebar for layer control
         createGeoJSONLayers();
         populateLayerList();
         await loadGeojsonData();
-        setupSearchControl(); // Search control is now directly on map
+        setupSearchControl();
         createLegend();
     });
   </script>
