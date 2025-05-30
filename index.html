@@ -21,6 +21,46 @@
     .leaflet-sidebar-content { padding:8px; font-size:14px; }
     .leaflet-sidebar-header { font-size:16px; margin-bottom:8px; }
     .layer-checkbox { margin:4px 0; }
+    /* Moved search control styles to a more global scope for direct control */
+    .leaflet-control-search {
+        position: absolute;
+        top: 10px; /* Adjust as needed */
+        left: 10px; /* Adjust as needed */
+        z-index: 999;
+        background: #fff;
+        border-radius: 4px;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+        padding: 5px;
+        display: flex;
+        align-items: center;
+        width: 250px; /* Fixed width for the search bar */
+    }
+
+    .leaflet-control-search .search-input {
+        flex-grow: 1;
+        border: none;
+        padding: 6px;
+        font-size: 16px;
+        outline: none;
+    }
+
+    .leaflet-control-search .search-button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 18px;
+        padding: 0 5px;
+        color: #555;
+        outline: none;
+    }
+    .leaflet-control-search .search-button:hover {
+        color: #000;
+    }
+
+    /* Hide the search pane in the sidebar as it's now a map control */
+    #searchpane {
+        display: none;
+    }
 
     .legend { position:absolute; bottom:20px; right:10px; background:#fff; padding:8px; font-size:14px; border-radius:4px; box-shadow:0 0 6px rgba(0,0,0,0.3); width:260px; }
     .legend-item { display:flex; align-items:center; margin-bottom:6px; white-space:nowrap; }
@@ -79,76 +119,46 @@
         border-bottom: none;
     }
 
-    /* --- Styles for the L.Control.Search (moved to top-left) --- */
-    .leaflet-control-search {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        z-index: 999;
-        background: #fff;
-        border-radius: 4px;
-        box-shadow: 0 1px 5px rgba(0,0,0,0.4);
-        padding: 5px;
-        display: flex;
-        align-items: center;
-        width: 250px;
-    }
-
-    .leaflet-control-search .search-input {
-        flex-grow: 1;
-        border: none;
-        padding: 6px;
-        font-size: 16px;
-        outline: none;
-    }
-
-    .leaflet-control-search .search-button {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 18px;
-        padding: 0 5px;
-        color: #555;
-        outline: none;
-    }
-    .leaflet-control-search .search-button:hover {
-        color: #000;
-    }
-
-    /* Hide the search pane in the sidebar as it's no longer used */
-    #searchpane {
-        display: none;
-    }
-
-    /* --- Custom Styles for L.Control.Layers to look like a button that expands --- */
+    /* --- Styles for the L.Control.Layers with image and text --- */
     .leaflet-control-layers {
         box-shadow: 0 1px 5px rgba(0,0,0,0.4);
         background: #fff;
         border-radius: 4px;
-        /* Positioned topright, adjusted slightly if needed for other controls */
         margin-top: 10px; /* Adjust spacing from top if needed */
         margin-right: 10px; /* Adjust spacing from right if needed */
     }
 
-    /* Style the toggle button with your image */
+    /* Style the toggle button with your image and text */
     .leaflet-control-layers-toggle {
-        background-image: url('image_9402ec.png') !important; /* Use your image here */
-        background-size: cover; /* Cover the entire area */
-        background-position: center; /* Center the image */
-        background-repeat: no-repeat;
-        width: 40px; /* Set width of the button */
-        height: 40px; /* Set height of the button */
-        border-radius: 4px; /* Match parent border-radius */
-        box-shadow: none; /* Remove extra shadow if not desired */
+        background-image: none !important; /* Remove any default Leaflet image */
+        background-color: #fff; /* Ensure white background */
+        border-radius: 4px;
+        width: auto; /* Allow width to adapt to content */
+        height: 40px; /* Fixed height for consistent button size */
+        line-height: 40px; /* Vertically center content */
         cursor: pointer;
-        display: block !important; /* Ensure visibility */
-        /* Optional: adjust padding/margin if your image has transparent borders */
-        padding: 0;
-        margin: 0;
+        display: flex !important; /* Use flexbox for image and text alignment */
+        align-items: center; /* Center items vertically */
+        padding: 0 10px; /* Padding inside the button */
+        box-shadow: none; /* No additional shadow on the toggle button itself */
     }
 
     .leaflet-control-layers-toggle:hover {
         background-color: #f4f4f4; /* Subtle hover effect on the button */
+    }
+
+    .leaflet-control-layers-toggle img {
+        width: 32px; /* Size of your image */
+        height: 32px; /* Size of your image */
+        margin-right: 8px; /* Space between image and text */
+        border-radius: 4px; /* Optional: slight border-radius for the image itself */
+        object-fit: cover; /* Ensures image covers the area */
+    }
+
+    .leaflet-control-layers-toggle span {
+        font-size: 14px; /* Adjust font size for "Layers" text */
+        color: #333; /* Color for "Layers" text */
+        white-space: nowrap; /* Prevent text wrap */
     }
 
     /* Style the labels (Street, Satellite) when the control is expanded */
@@ -192,13 +202,18 @@
   <div id="sidebar" class="leaflet-sidebar collapsed">
     <div class="leaflet-sidebar-tabs"><ul role="tablist">
       <li><a href="#layers" role="tab"><i class="fa fa-list"></i></a></li>
-      </ul></div>
+      <li><a href="#searchpane" role="tab"><i class="fa fa-search"></i></a></li>
+    </ul></div>
     <div class="leaflet-sidebar-content">
       <div id="layers" class="leaflet-sidebar-pane">
         <h1 class="leaflet-sidebar-header">ស្រទាប់<button class="leaflet-sidebar-close"><i class="fa fa-chevron-right"></i></button></h1>
         <div id="layer-list"></div>
       </div>
+      <div id="searchpane" class="leaflet-sidebar-pane">
+        <h1 class="leaflet-sidebar-header">ស្វែងរក<button class="leaflet-sidebar-close"><i class="fa fa-chevron-right"></i></button></h1>
+        <div id="search-control"></div>
       </div>
+    </div>
   </div>
   <div id="map"></div>
   <div id="loading-spinner">
@@ -210,6 +225,7 @@
   <script src="https://unpkg.com/leaflet-sidebar-v2/js/leaflet-sidebar.min.js"></script>
   <script src="https://unpkg.com/leaflet-search/dist/leaflet-search.min.js"></script>
   <script src="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
   <script>
     // Configuration Object
     const config = {
@@ -221,8 +237,8 @@
             branch: 'main'
         },
         layerStyles: {
-            existingPipe: { color: '#444', weight: 2 }, // Slightly softer black
-            newPipe: { color: 'white', weight: 2 },     // Reverted to white as requested
+            existingPipe: { color: '#444', weight: 2 },
+            newPipe: { color: 'white', weight: 2 },
             waterSource: { radius: 6, fillColor: '#3498db', color: '#2980b9', fillOpacity: 0.8, weight: 1 },
             waterTreatmentPlant: { radius: 6, fillColor: '#f1c40f', color: '#d4ac0d', fillOpacity: 0.8, weight: 1 }
         },
@@ -269,10 +285,17 @@
         });
 
         // Base Layers control - positioned topright
-        // Now collapsed: true (default) so it will hide options until clicked
+        // `collapsed: true` (default) means it will hide options until clicked
         L.control.layers({ 'Street': osm.addTo(map), 'Satellite': esri }, null, { position: 'topright' }).addTo(map);
 
-        // No need to add Font Awesome icon via JS anymore, CSS handles the background-image
+        // Custom content for the layers toggle button
+        const layersToggle = document.querySelector('.leaflet-control-layers-toggle');
+        if (layersToggle) {
+            layersToggle.innerHTML = `
+                <img src="image_9402ec.png" alt="Layers Icon">
+                <span>Layers</span>
+            `;
+        }
     }
 
     /**
@@ -540,10 +563,11 @@
     function setupSearchControl() {
         allPointFeatures = L.featureGroup([wsLayer, wtpLayer]);
 
+        // Integrate search control directly into the map, not just the sidebar
         const searchControl = new L.Control.Search({
             layer: allPointFeatures,
             propertyName: 'name',
-            collapsed: false,
+            collapsed: false, // Keep it expanded by default
             textPlaceholder: 'ស្វែងរក...',
             marker: false,
             inputClasses: 'search-input',
@@ -557,7 +581,10 @@
             initial: false
         });
 
-        map.addControl(searchControl);
+        map.addControl(searchControl); // Add to map directly
+
+        // No longer append to a sidebar div, as it's a direct map control
+        // document.getElementById('search-control').appendChild(searchControl.getContainer());
 
         searchControl.on('search:emptylocation', function(e) {
             alert('No matching location found for: "' + e.text + '"');
