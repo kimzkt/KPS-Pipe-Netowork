@@ -21,7 +21,8 @@
     .leaflet-sidebar-content { padding:8px; font-size:14px; }
     .leaflet-sidebar-header { font-size:16px; margin-bottom:8px; }
     .layer-checkbox { margin:4px 0; }
-    /* Moved search control styles to a more global scope for direct control */
+
+    /* Search Control Styles */
     .leaflet-control-search {
         position: absolute;
         top: 10px; /* Adjust as needed */
@@ -57,7 +58,7 @@
         color: #000;
     }
 
-    /* Hide the search pane in the sidebar as it's now a map control */
+    /* Hide the search pane in the sidebar if search is a map control */
     #searchpane {
         display: none;
     }
@@ -119,7 +120,7 @@
         border-bottom: none;
     }
 
-    /* --- Styles for the L.Control.Layers with image and text --- */
+    /* --- Custom Styles for L.Control.Layers with image and text --- */
     .leaflet-control-layers {
         box-shadow: 0 1px 5px rgba(0,0,0,0.4);
         background: #fff;
@@ -563,11 +564,10 @@
     function setupSearchControl() {
         allPointFeatures = L.featureGroup([wsLayer, wtpLayer]);
 
-        // Integrate search control directly into the map, not just the sidebar
         const searchControl = new L.Control.Search({
             layer: allPointFeatures,
             propertyName: 'name',
-            collapsed: false, // Keep it expanded by default
+            collapsed: false, // Keep it expanded by default if preferred
             textPlaceholder: 'ស្វែងរក...',
             marker: false,
             inputClasses: 'search-input',
@@ -581,9 +581,10 @@
             initial: false
         });
 
-        map.addControl(searchControl); // Add to map directly
+        map.addControl(searchControl);
 
-        // No longer append to a sidebar div, as it's a direct map control
+        // It looks like the search control is intended to be a direct map control, not in the sidebar.
+        // If you still want it in the sidebar, uncomment the following line and remove the `display: none;` from #searchpane CSS.
         // document.getElementById('search-control').appendChild(searchControl.getContainer());
 
         searchControl.on('search:emptylocation', function(e) {
