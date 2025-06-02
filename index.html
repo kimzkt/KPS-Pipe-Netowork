@@ -326,7 +326,7 @@
                 const z = map.getZoom();
                 const mpp = 156543.0339 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);
                 const scale = mpp * 96 / 0.0254;
-                this._div.innerHTML = 'ទំហំ៖ 1:' + Math.round(scale).toLocaleString();
+                this._div.innerHTML = 'មាត្រដ្ឋាន៖ 1:' + Math.round(scale).toLocaleString(); // Changed 'ទំហំ' to 'មាត្រដ្ឋាន'
             }
         });
         L.control.scaleDenominator = (opts) => new ScaleDen(opts);
