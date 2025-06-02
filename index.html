@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-sidebar-v2/css/leaflet-sidebar.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-search/dist/leaflet-search.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-minimap@3.6.1/dist/Control.MiniMap.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
   <style>
@@ -73,42 +72,7 @@
     .legend-item:last-child { margin-bottom:0; }
     .legend i { width:18px; height:18px; margin-right:8px; border:1px solid #000; }
     .legend i.circle { border-radius:50%; }
-
-    /* Custom Central Scale Control container */
-    .leaflet-control-central-scale {
-        position: absolute;
-        bottom: 20px; /* Position above map bottom */
-        left: 50%;
-        transform: translateX(-50%); /* Center horizontally */
-        z-index: 999; /* Ensure it's above the map */
-        display: flex; /* Use flexbox for inner controls */
-        flex-direction: column; /* Stack them vertically */
-        align-items: center; /* Center horizontally within the flex container */
-        gap: 5px; /* Space between the two scale components */
-        pointer-events: auto; /* Ensure interactions are possible */
-    }
-
-    /* Override default Leaflet scale control positioning when inside our custom control */
-    .leaflet-control-central-scale .leaflet-control-scale {
-        position: static !important; /* Remove absolute positioning */
-        margin-bottom: 0 !important; /* No extra margin */
-        background: #fff; /* Match background for better appearance */
-        padding: 4px 6px;
-        font-size: 12px;
-        border:1px solid rgba(0,0,0,0.2);
-        border-radius:4px;
-    }
-
-    /* Override default Leaflet scale denominator positioning when inside our custom control */
-    .leaflet-control-central-scale .leaflet-control-scale-denominator {
-        position: static !important; /* Remove absolute positioning */
-        margin-top: 0 !important; /* No extra margin */
-        background:#fff; /* Match background for better appearance */
-        padding:4px 6px;
-        font-size:12px;
-        border:1px solid rgba(0,0,0,0.2);
-        border-radius:4px;
-    }
+    .leaflet-control-scale-denominator { background:#fff; padding:4px 6px; font-size:12px; border:1px solid rgba(0,0,0,0.2); border-radius:4px; margin-top:4px; }
 
     /* Loading Spinner Styles */
     #loading-spinner {
@@ -198,30 +162,7 @@
         /* Adjust positions of other controls if they conflict */
         .leaflet-control-zoom { top: 60px !important; right: 10px !important; }
         .leaflet-top.leaflet-right { top: 60px !important; right: 10px !important; } /* For locate control */
-
-        /* MiniMap specific adjustments for mobile to give more space */
-        .leaflet-control-minimap {
-            bottom: 10px !important;
-            left: 10px !important;
-            width: 120px; /* Smaller minimap on mobile */
-            height: 120px;
-        }
-        .leaflet-control-minimap .leaflet-control-minimap-toggle-display {
-             width: 20px; /* Smaller toggle button */
-             height: 20px;
-             line-height: 20px;
-        }
-        .leaflet-control-minimap .leaflet-control-minimap-toggle-display i {
-            font-size: 10px;
-        }
-
-        /* Central Scale Control adjustments for mobile */
-        .leaflet-control-central-scale {
-            bottom: 10px; /* Adjust if other controls are lower */
-            /* Ensure it doesn't overlap with minimap or legend */
-            left: 50%;
-            transform: translateX(-50%);
-        }
+        .leaflet-bottom.leaflet-left { margin-left: 10px !important; margin-bottom: 10px !important; } /* For scale control, ensure it's not hidden by sidebar */
     }
 
   </style>
@@ -258,7 +199,6 @@
   <script src="https://unpkg.com/leaflet-sidebar-v2/js/leaflet-sidebar.min.js"></script>
   <script src="https://unpkg.com/leaflet-search/dist/leaflet-search.min.js"></script>
   <script src="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.js"></script>
-  <script src="https://unpkg.com/leaflet-minimap@3.6.1/dist/Control.MiniMap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
   <script>
     // Configuration Object
@@ -308,6 +248,10 @@
                 maxZoom: 19
             })
         }
+        // Add more base maps here if needed, e.g., 'Terrain', 'Light', 'Dark'
+        // 'Terrain': { layer: L.tileLayer('YOUR_TERRAIN_TILE_URL', { attribution: 'YOUR_ATTRIBUTION' }) },
+        // 'Light': { layer: L.tileLayer('YOUR_LIGHT_TILE_URL', { attribution: 'YOUR_ATTRIBUTION' }) },
+        // 'Dark': { layer: L.tileLayer('YOUR_DARK_TILE_URL', { attribution: 'YOUR_ATTRIBUTION' }) }
     };
 
     /**
@@ -346,30 +290,34 @@
     }
 
     /**
-     * Adds the Leaflet MiniMap control.
-     */
-    function addMinimap() {
-        // Use the same Street map layer for the minimap
-        const miniMapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: config.attribution.osm,
-            maxZoom: 19
-        });
-
-        // Initialize the minimap control
-        const miniMap = new L.Control.MiniMap(miniMapLayer, {
-            toggleDisplay: true, // Allow hiding/showing
-            position: 'bottomleft', // Position at bottom-left
-            minimized: false, // Start expanded
-            aimingRectOptions: { color: "#ff7800", weight: 1, clickable: false },
-            shadowRectOptions: { color: "#000000", weight: 1, opacity: 0.5, clickable: false }
-        }).addTo(map);
-    }
-
-    /**
-     * Adds various controls to the map, including a custom central scale control.
+     * Adds various controls to the map.
      */
     function addMapControls() {
         L.control.zoom({ position: 'topright' }).addTo(map);
+
+        // Standard Leaflet Scale Control
+        L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
+
+        // Custom Scale Denominator Control (placed just below the standard scale)
+        const ScaleDen = L.Control.extend({
+            options: { position: 'bottomleft' },
+            onAdd: function(mapInstance) {
+                this._div = L.DomUtil.create('div', 'leaflet-control-scale-denominator');
+                mapInstance.on('zoomend moveend', this._updateScaleDenominator, this);
+                this._updateScaleDenominator();
+                return this._div;
+            },
+            _updateScaleDenominator: function() {
+                const lat = map.getCenter().lat;
+                const z = map.getZoom();
+                const mpp = 156543.0339 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);
+                const scale = mpp * 96 / 0.0254;
+                this._div.innerHTML = 'មាត្រដ្ឋាន៖ 1:' + Math.round(scale).toLocaleString();
+            }
+        });
+        L.control.scaleDenominator = (opts) => new ScaleDen(opts);
+        L.control.scaleDenominator({ position: 'bottomleft' }).addTo(map);
+
 
         L.control.locate({
             position: 'topright',
@@ -391,60 +339,6 @@
                 weight: 1
             }
         }).addTo(map);
-
-        // Custom Central Scale Control
-        const CentralScale = L.Control.extend({
-            options: { position: 'bottomright' }, // Leaflet requires a position, but we'll override with CSS
-            onAdd: function(mapInstance) {
-                this._div = L.DomUtil.create('div', 'leaflet-control-central-scale');
-
-                // Create standard Leaflet Scale Control
-                this._scaleControl = L.control.scale({
-                    position: 'topleft', // Position relative to this container
-                    metric: true,
-                    imperial: false
-                });
-                this._div.appendChild(this._scaleControl.onAdd(mapInstance));
-
-                // Create custom Scale Denominator Control
-                this._scaleDenominatorControl = L.Control.extend({
-                    options: { position: 'topleft' }, // Position relative to this container
-                    onAdd: function(m) {
-                        this._el = L.DomUtil.create('div', 'leaflet-control-scale-denominator');
-                        m.on('zoomend moveend', this._updateScaleDenominator, this);
-                        this._updateScaleDenominator();
-                        return this._el;
-                    },
-                    onRemove: function(m) {
-                        m.off('zoomend moveend', this._updateScaleDenominator, this);
-                    },
-                    _updateScaleDenominator: function() {
-                        const lat = map.getCenter().lat;
-                        const z = map.getZoom();
-                        const mpp = 156543.0339 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);
-                        const scale = mpp * 96 / 0.0254;
-                        this._el.innerHTML = 'មាត្រដ្ឋាន៖ 1:' + Math.round(scale).toLocaleString();
-                    }
-                });
-                this._scaleDenominator = new this._scaleDenominatorControl();
-                this._div.appendChild(this._scaleDenominator.onAdd(mapInstance));
-
-                // Add event listeners to update the internal controls when map moves/zooms
-                mapInstance.on('zoomend moveend', () => {
-                    this._scaleControl._update(); // Force update for standard scale
-                    this._scaleDenominator._updateScaleDenominator(); // Force update for custom denominator
-                });
-
-                return this._div;
-            },
-            onRemove: function(mapInstance) {
-                this._scaleControl.onRemove(mapInstance);
-                this._scaleDenominator.onRemove(mapInstance);
-                mapInstance.off('zoomend moveend');
-            }
-        });
-        L.control.centralScale = (opts) => new CentralScale(opts);
-        L.control.centralScale({}).addTo(map);
     }
 
     /**
@@ -463,10 +357,13 @@
      * Creates and adds GeoJSON layers to the map.
      */
     function createGeoJSONLayers() {
+        // New layer for country boundary (added first so it's at the bottom)
         countryBoundaryLayer = L.geoJSON(null, {
             style: config.layerStyles.countryBoundary,
-            interactive: false,
-            onEachFeature: (feature, layer) => {}
+            interactive: false, // Make it non-interactive to allow clicks on layers above
+            onEachFeature: (feature, layer) => {
+                // No popup for non-interactive layer
+            }
         });
 
         existingLayer = L.geoJSON(null, {
@@ -750,8 +647,7 @@
     // Main execution flow
     document.addEventListener('DOMContentLoaded', async () => {
         initializeMap();
-        addMapControls(); // This will now include the custom central scale
-        addMinimap(); // Add the minimap
+        addMapControls();
         setupSidebar();
         createGeoJSONLayers();
         populateLayerList();
