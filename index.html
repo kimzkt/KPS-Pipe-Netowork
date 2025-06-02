@@ -20,9 +20,17 @@
     .leaflet-sidebar-tabs a { width:50px; height:50px; line-height:50px; }
     .leaflet-sidebar-content { padding:8px; font-size:14px; }
     .leaflet-sidebar-header { font-size:16px; margin-bottom:8px; }
-    .layer-checkbox { margin:4px 0; }
 
-    /* Search Control Styles (for the map control, not sidebar) */
+    /* Layer and Base Map sections in sidebar */
+    .sidebar-section { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+    .sidebar-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .sidebar-section-title { font-weight: bold; margin-bottom: 8px; font-size: 15px; color: #333; }
+
+    .layer-checkbox, .base-map-radio { margin:4px 0; display: flex; align-items: center; }
+    .layer-checkbox input[type="checkbox"],
+    .base-map-radio input[type="radio"] { margin-right: 8px; }
+
+    /* Search Control Styles (now directly on map) */
     .leaflet-control-search {
         position: absolute;
         top: 10px; /* Adjust as needed */
@@ -56,11 +64,6 @@
     }
     .leaflet-control-search .search-button:hover {
         color: #000;
-    }
-
-    /* Keep #searchpane hidden as the search control is now directly on the map */
-    #searchpane {
-        display: none;
     }
 
     .legend { position:absolute; bottom:20px; right:10px; background:#fff; padding:8px; font-size:14px; border-radius:4px; box-shadow:0 0 6px rgba(0,0,0,0.3); width:260px; }
@@ -120,81 +123,11 @@
         border-bottom: none;
     }
 
-    /* --- Custom Styles for L.Control.Layers with image and no text --- */
-    .leaflet-control-layers {
-        box-shadow: 0 1px 5px rgba(0,0,0,0.4);
-        background: #fff;
-        border-radius: 4px;
-        margin-top: 10px; /* Adjust spacing from top if needed */
-        margin-right: 10px; /* Adjust spacing from right if needed */
-    }
-
-    /* Style the toggle button with your image and no text */
+    /* Removed custom L.Control.Layers toggle styling as base layers are now in sidebar */
     .leaflet-control-layers-toggle {
-        background-image: none !important; /* Remove any default Leaflet image */
-        background-color: #fff; /* Ensure white background */
-        border-radius: 4px;
-        width: 40px; /* Fixed width to fit just the image */
-        height: 40px; /* Fixed height for consistent button size */
-        cursor: pointer;
-        display: flex !important; /* Use flexbox for image centering */
-        align-items: center; /* Center items vertically */
-        justify-content: center; /* Center image horizontally */
-        padding: 0; /* No padding needed around the image itself */
-        box-shadow: none; /* No additional shadow on the toggle button itself */
+        display: none !important; /* Hide the default Leaflet layers toggle */
     }
 
-    .leaflet-control-layers-toggle:hover {
-        background-color: #f4f4f4; /* Subtle hover effect on the button */
-    }
-
-    .leaflet-control-layers-toggle img {
-        width: 32px; /* Size of your image */
-        height: 32px; /* Size of your image */
-        margin: 0; /* Remove any margin */
-        border-radius: 4px; /* Optional: slight border-radius for the image itself */
-        object-fit: cover; /* Ensures image covers the area */
-    }
-
-    /* The span for "Layers" text is removed, so no style needed for it */
-    .leaflet-control-layers-toggle span {
-        display: none; /* Ensure text is hidden if accidentally present */
-    }
-
-    /* Style the labels (Street, Satellite) when the control is expanded */
-    .leaflet-control-layers label {
-        display: block;
-        padding: 8px 12px;
-        cursor: pointer;
-        font-size: 14px;
-        border-bottom: 1px solid #eee; /* Separator between options */
-        white-space: nowrap;
-    }
-
-    .leaflet-control-layers label:last-of-type {
-        border-bottom: none; /* No border on the last item */
-    }
-
-    .leaflet-control-layers label:hover {
-        background-color: #f4f4f4; /* Subtle hover effect on options */
-    }
-
-    /* Hide the radio buttons visually */
-    .leaflet-control-layers input[type="radio"] {
-        display: none;
-    }
-
-    /* Style for the currently selected base layer option */
-    .leaflet-control-layers input[type="radio"]:checked + span {
-        font-weight: bold; /* Make selected text bold */
-        color: #005cbf; /* Highlight color */
-        background-color: #e6f0ff; /* Subtle background for selected */
-    }
-
-    /* Ensure the list of layers collapses and expands properly */
-    .leaflet-control-layers-list {
-        padding: 0; /* Remove default padding */
-    }
   </style>
 </head>
 <body>
@@ -207,8 +140,15 @@
     </div>
     <div class="leaflet-sidebar-content">
       <div id="layers" class="leaflet-sidebar-pane">
-        <h1 class="leaflet-sidebar-header">ស្រទាប់<button class="leaflet-sidebar-close"><i class="fa fa-chevron-right"></i></button></h1>
-        <div id="layer-list"></div>
+        <h1 class="leaflet-sidebar-header">ស្រទាប់ និង ផែនទីមូលដ្ឋាន<button class="leaflet-sidebar-close"><i class="fa fa-chevron-right"></i></button></h1>
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">ស្រទាប់</div>
+            <div id="layer-list"></div>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">ផែនទីមូលដ្ឋាន</div>
+            <div id="base-map-list"></div>
+        </div>
       </div>
       </div>
   </div>
@@ -238,10 +178,10 @@
             newPipe: { color: 'white', weight: 2 },
             waterSource: { radius: 6, fillColor: '#3498db', color: '#2980b9', fillOpacity: 0.8, weight: 1 },
             waterTreatmentPlant: { radius: 6, fillColor: '#f1c40f', color: '#d4ac0d', fillOpacity: 0.8, weight: 1 },
-            countryBoundary: { // Updated style for country boundary
+            countryBoundary: {
                 color: '#ff0000', // Red border
                 weight: 2,
-                fillOpacity: 0 // Transparent fill
+                fillOpacity: 0
             }
         },
         attribution: {
@@ -253,8 +193,29 @@
     // Global map variables
     let map;
     let sidebar;
-    let existingLayer, newLayer, wsLayer, wtpLayer, countryBoundaryLayer; // Added countryBoundaryLayer
-    let allPointFeatures; // Used for search control
+    let existingLayer, newLayer, wsLayer, wtpLayer, countryBoundaryLayer;
+    let allPointFeatures;
+    let currentBaseLayer; // To keep track of the active base layer
+
+    const baseLayersConfig = {
+        'Street': {
+            layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: config.attribution.osm,
+                maxZoom: 19
+            }),
+            default: true // Set Street as default
+        },
+        'Satellite': {
+            layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: config.attribution.esri,
+                maxZoom: 19
+            })
+        }
+        // Add more base maps here if needed, e.g., 'Terrain', 'Light', 'Dark'
+        // 'Terrain': { layer: L.tileLayer('YOUR_TERRAIN_TILE_URL', { attribution: 'YOUR_ATTRIBUTION' }) },
+        // 'Light': { layer: L.tileLayer('YOUR_LIGHT_TILE_URL', { attribution: 'YOUR_ATTRIBUTION' }) },
+        // 'Dark': { layer: L.tileLayer('YOUR_DARK_TILE_URL', { attribution: 'YOUR_ATTRIBUTION' }) }
+    };
 
     /**
      * Shows the loading spinner.
@@ -276,30 +237,18 @@
     function initializeMap() {
         map = L.map('map', { zoomControl: false }).setView(config.mapCenter, config.initialZoom);
 
-        const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: config.attribution.osm,
-            maxZoom: 19
-        });
+        // Add the default base layer to the map
+        for (const key in baseLayersConfig) {
+            if (baseLayersConfig[key].default) {
+                currentBaseLayer = baseLayersConfig[key].layer.addTo(map);
+                break;
+            }
+        }
 
-        const esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: config.attribution.esri,
-            maxZoom: 19
-        });
-
-        // Base Layers control - positioned topright
-        L.control.layers({ 'Street': osm.addTo(map), 'Satellite': esri }, null, { position: 'topright' }).addTo(map);
-
-        // Custom content for the layers toggle button
+        // Hide the default Leaflet layers toggle, as base maps are now in sidebar
         const layersToggle = document.querySelector('.leaflet-control-layers-toggle');
         if (layersToggle) {
-            // Only include the image, remove the <span>Layers</span>
-            layersToggle.innerHTML = `
-                <img src="./image_9402ec.png" alt="Layers Icon">
-            `;
-            // Adjust width and justify-content for image-only display
-            layersToggle.style.width = '40px'; // Set to match its height
-            layersToggle.style.justifyContent = 'center'; // Center the image
-            layersToggle.style.padding = '0'; // Remove padding
+            layersToggle.style.display = 'none';
         }
     }
 
@@ -326,7 +275,7 @@
                 const z = map.getZoom();
                 const mpp = 156543.0339 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);
                 const scale = mpp * 96 / 0.0254;
-                this._div.innerHTML = 'មាត្រដ្ឋាន៖ 1:' + Math.round(scale).toLocaleString(); // Changed 'ទំហំ' to 'មាត្រដ្ឋាន'
+                this._div.innerHTML = 'មាត្រដ្ឋាន៖ 1:' + Math.round(scale).toLocaleString();
             }
         });
         L.control.scaleDenominator = (opts) => new ScaleDen(opts);
@@ -370,15 +319,9 @@
         // New layer for country boundary (added first so it's at the bottom)
         countryBoundaryLayer = L.geoJSON(null, {
             style: config.layerStyles.countryBoundary,
-            interactive: false, // Make it non-interactive
+            interactive: false, // Make it non-interactive to allow clicks on layers above
             onEachFeature: (feature, layer) => {
-                const properties = feature.properties || {};
-                let html = '<b>Country Boundary</b>';
-                if (properties.name) {
-                    html += `<br>${properties.name}`;
-                }
-                // Removed popup binding for non-interactive layer
-                // layer.bindPopup(html);
+                // No popup for non-interactive layer
             }
         });
 
@@ -445,7 +388,7 @@
         });
 
 
-        // Add countryBoundaryLayer first, so it's at the bottom
+        // Add layers to map in desired order (country boundary at the very bottom)
         countryBoundaryLayer.addTo(map);
         existingLayer.addTo(map);
         newLayer.addTo(map);
@@ -454,7 +397,7 @@
     }
 
     /**
-     * Populates the layer list in the sidebar.
+     * Populates the layer list (overlays and base maps) in the sidebar.
      */
     function populateLayerList() {
         const overlays = {
@@ -462,18 +405,18 @@
             'បណ្តាញទុយោពង្រីក': newLayer,
             'ទីតាំងប្រភពទឹក': wsLayer,
             'ទីតាំងស្ថានីយទឹកស្អាត': wtpLayer,
-            'ព្រំដែនប្រទេស': countryBoundaryLayer // Added country boundary to the list
+            'ព្រំដែនប្រទេស': countryBoundaryLayer
         };
 
-        const list = document.getElementById('layer-list');
+        const layerListDiv = document.getElementById('layer-list');
         Object.keys(overlays).forEach(name => {
             const div = document.createElement('div');
             div.className = 'layer-checkbox';
 
             const input = document.createElement('input');
             input.type = 'checkbox';
-            input.checked = true; // All layers checked by default
-            input.id = `layer-${name.replace(/\s/g, '-')}`;
+            input.checked = true; // All overlay layers checked by default
+            input.id = `overlay-${name.replace(/\s/g, '-')}`;
             input.onchange = () => {
                 if (input.checked) {
                     map.addLayer(overlays[name]);
@@ -488,9 +431,37 @@
 
             div.appendChild(input);
             div.appendChild(label);
-            list.appendChild(div);
+            layerListDiv.appendChild(div);
+        });
+
+        const baseMapListDiv = document.getElementById('base-map-list');
+        Object.keys(baseLayersConfig).forEach(name => {
+            const div = document.createElement('div');
+            div.className = 'base-map-radio';
+
+            const input = document.createElement('input');
+            input.type = 'radio';
+            input.name = 'base-map'; // All base map radios should have the same name
+            input.id = `base-${name.replace(/\s/g, '-')}`;
+            input.checked = baseLayersConfig[name].default || false; // Set default base map as checked
+
+            input.onchange = () => {
+                if (map.hasLayer(currentBaseLayer)) {
+                    map.removeLayer(currentBaseLayer);
+                }
+                currentBaseLayer = baseLayersConfig[name].layer.addTo(map);
+            };
+
+            const label = document.createElement('label');
+            label.htmlFor = input.id;
+            label.innerText = name;
+
+            div.appendChild(input);
+            div.appendChild(label);
+            baseMapListDiv.appendChild(div);
         });
     }
+
 
     /**
      * Loads GeoJSON data from GitHub.
@@ -502,6 +473,7 @@
         let effectiveUser = username;
         let effectiveRepo = repo;
 
+        // Auto-infer GitHub user/repo if placeholders are used, for gh-pages or local testing
         if (username === 'YOUR_GITHUB_USERNAME' || repo === 'YOUR_GITHUB_REPO_NAME') {
             try {
                 const urlPathParts = location.pathname.split('/').filter(Boolean);
@@ -570,7 +542,7 @@
                         } else if (name.includes('WTP')) {
                             wtpLayer.addData(feature);
                         }
-                    } else if (geometryType && /Polygon/.test(geometryType)) { // New condition for polygons
+                    } else if (geometryType && /Polygon/.test(geometryType)) {
                         countryBoundaryLayer.addData(feature);
                     }
                 });
@@ -589,11 +561,11 @@
     function setupSearchControl() {
         allPointFeatures = L.featureGroup([wsLayer, wtpLayer]);
 
-        // The search control is now added directly to the map, not the sidebar.
+        // Search control added directly to the map (top-left)
         const searchControl = new L.Control.Search({
             layer: allPointFeatures,
             propertyName: 'name',
-            collapsed: false, // Keep it expanded by default if preferred
+            collapsed: false, // Keep it expanded by default
             textPlaceholder: 'ស្វែងរក...',
             marker: false,
             inputClasses: 'search-input',
@@ -608,10 +580,6 @@
         });
 
         map.addControl(searchControl);
-
-        searchControl.on('search:emptylocation', function(e) {
-            alert('No matching location found for: "' + e.text + '"');
-        });
     }
 
     /**
@@ -627,7 +595,8 @@
                 <div class="legend-item"><i style="background:${config.layerStyles.newPipe.color}; border:1px solid black;"></i> បណ្តាញទុយោពង្រីក</div>
                 <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterSource.fillColor}; border-color:${config.layerStyles.waterSource.color};"></i> ទីតាំងប្រភពទឹក</div>
                 <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterTreatmentPlant.fillColor}; border-color:${config.layerStyles.waterTreatmentPlant.color};"></i> ទីតាំងស្ថានីយទឹកស្អាត</div>
-                <div class="legend-item"><i style="background:transparent; border:1px solid ${config.layerStyles.countryBoundary.color};"></i> ព្រំដែនប្រទេស</div> `;
+                <div class="legend-item"><i style="background:transparent; border:1px solid ${config.layerStyles.countryBoundary.color};"></i> ព្រំដែនប្រទេស</div>
+            `;
             return div;
         };
         legend.addTo(map);
@@ -639,7 +608,7 @@
         addMapControls();
         setupSidebar();
         createGeoJSONLayers();
-        populateLayerList();
+        populateLayerList(); // Now populates both overlays and base maps
         await loadGeojsonData();
         setupSearchControl();
         createLegend();
