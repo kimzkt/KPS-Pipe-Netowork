@@ -141,7 +141,7 @@
         cursor: pointer;
         display: flex !important; /* Use flexbox for image and text alignment */
         align-items: center; /* Center items vertically */
-        justify-content: flex-start; /* *** NEW: Align content to the left *** */
+        justify-content: flex-start; /* Align content to the left */
         padding: 0 10px; /* Padding inside the button */
         box-shadow: none; /* No additional shadow on the toggle button itself */
     }
@@ -285,8 +285,8 @@
         });
 
         // Base Layers control - positioned topright
-        // `collapsed: true` (default) means it will hide options until clicked
-        L.control.layers({ 'Street': osm.addTo(map), 'Satellite': esri }, null, { position: 'topright' }).addTo(map);
+        // Removed 'Satellite' option, only 'Street' remains.
+        L.control.layers({ 'Street': osm.addTo(map) }, null, { position: 'topright' }).addTo(map);
 
         // Custom content for the layers toggle button
         const layersToggle = document.querySelector('.leaflet-control-layers-toggle');
