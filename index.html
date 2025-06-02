@@ -367,6 +367,21 @@
      * Creates and adds GeoJSON layers to the map.
      */
     function createGeoJSONLayers() {
+        // New layer for country boundary (added first so it's at the bottom)
+        countryBoundaryLayer = L.geoJSON(null, {
+            style: config.layerStyles.countryBoundary,
+            interactive: false, // Make it non-interactive
+            onEachFeature: (feature, layer) => {
+                const properties = feature.properties || {};
+                let html = '<b>Country Boundary</b>';
+                if (properties.name) {
+                    html += `<br>${properties.name}`;
+                }
+                // Removed popup binding for non-interactive layer
+                // layer.bindPopup(html);
+            }
+        });
+
         existingLayer = L.geoJSON(null, {
             style: config.layerStyles.existingPipe,
             onEachFeature: (feature, layer) => {
@@ -429,26 +444,13 @@
             }
         });
 
-        // New layer for country boundary
-        countryBoundaryLayer = L.geoJSON(null, {
-            style: config.layerStyles.countryBoundary,
-            onEachFeature: (feature, layer) => {
-                const properties = feature.properties || {};
-                let html = '<b>Country Boundary</b>';
-                if (properties.name) {
-                    html += `<br>${properties.name}`;
-                }
-                // Add more properties if desired
-                layer.bindPopup(html);
-            }
-        });
 
-
+        // Add countryBoundaryLayer first, so it's at the bottom
+        countryBoundaryLayer.addTo(map);
         existingLayer.addTo(map);
         newLayer.addTo(map);
         wsLayer.addTo(map);
         wtpLayer.addTo(map);
-        countryBoundaryLayer.addTo(map); // Add to map by default
     }
 
     /**
