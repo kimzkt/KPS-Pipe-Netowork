@@ -237,7 +237,12 @@
             existingPipe: { color: '#444', weight: 2 },
             newPipe: { color: 'white', weight: 2 },
             waterSource: { radius: 6, fillColor: '#3498db', color: '#2980b9', fillOpacity: 0.8, weight: 1 },
-            waterTreatmentPlant: { radius: 6, fillColor: '#f1c40f', color: '#d4ac0d', fillOpacity: 0.8, weight: 1 }
+            waterTreatmentPlant: { radius: 6, fillColor: '#f1c40f', color: '#d4ac0d', fillOpacity: 0.8, weight: 1 },
+            countryBoundary: { // Updated style for country boundary
+                color: '#ff0000', // Red border
+                weight: 2,
+                fillOpacity: 0 // Transparent fill
+            }
         },
         attribution: {
             osm: '© OpenStreetMap contributors',
@@ -248,7 +253,7 @@
     // Global map variables
     let map;
     let sidebar;
-    let existingLayer, newLayer, wsLayer, wtpLayer;
+    let existingLayer, newLayer, wsLayer, wtpLayer, countryBoundaryLayer; // Added countryBoundaryLayer
     let allPointFeatures; // Used for search control
 
     /**
@@ -282,7 +287,6 @@
         });
 
         // Base Layers control - positioned topright
-        // Reverted to include both 'Street' and 'Satellite'
         L.control.layers({ 'Street': osm.addTo(map), 'Satellite': esri }, null, { position: 'topright' }).addTo(map);
 
         // Custom content for the layers toggle button
@@ -425,10 +429,26 @@
             }
         });
 
+        // New layer for country boundary
+        countryBoundaryLayer = L.geoJSON(null, {
+            style: config.layerStyles.countryBoundary,
+            onEachFeature: (feature, layer) => {
+                const properties = feature.properties || {};
+                let html = '<b>Country Boundary</b>';
+                if (properties.name) {
+                    html += `<br>${properties.name}`;
+                }
+                // Add more properties if desired
+                layer.bindPopup(html);
+            }
+        });
+
+
         existingLayer.addTo(map);
         newLayer.addTo(map);
         wsLayer.addTo(map);
         wtpLayer.addTo(map);
+        countryBoundaryLayer.addTo(map); // Add to map by default
     }
 
     /**
@@ -439,7 +459,8 @@
             'បណ្តាញទុយោបច្ចុប្បន្ន': existingLayer,
             'បណ្តាញទុយោពង្រីក': newLayer,
             'ទីតាំងប្រភពទឹក': wsLayer,
-            'ទីតាំងស្ថានីយទឹកស្អាត': wtpLayer
+            'ទីតាំងស្ថានីយទឹកស្អាត': wtpLayer,
+            'ព្រំដែនប្រទេស': countryBoundaryLayer // Added country boundary to the list
         };
 
         const list = document.getElementById('layer-list');
@@ -449,7 +470,7 @@
 
             const input = document.createElement('input');
             input.type = 'checkbox';
-            input.checked = true;
+            input.checked = true; // All layers checked by default
             input.id = `layer-${name.replace(/\s/g, '-')}`;
             input.onchange = () => {
                 if (input.checked) {
@@ -547,6 +568,8 @@
                         } else if (name.includes('WTP')) {
                             wtpLayer.addData(feature);
                         }
+                    } else if (geometryType && /Polygon/.test(geometryType)) { // New condition for polygons
+                        countryBoundaryLayer.addData(feature);
                     }
                 });
             }
@@ -602,7 +625,7 @@
                 <div class="legend-item"><i style="background:${config.layerStyles.newPipe.color}; border:1px solid black;"></i> បណ្តាញទុយោពង្រីក</div>
                 <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterSource.fillColor}; border-color:${config.layerStyles.waterSource.color};"></i> ទីតាំងប្រភពទឹក</div>
                 <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterTreatmentPlant.fillColor}; border-color:${config.layerStyles.waterTreatmentPlant.color};"></i> ទីតាំងស្ថានីយទឹកស្អាត</div>
-            `;
+                <div class="legend-item"><i style="background:transparent; border:1px solid ${config.layerStyles.countryBoundary.color};"></i> ព្រំដែនប្រទេស</div> `;
             return div;
         };
         legend.addTo(map);
