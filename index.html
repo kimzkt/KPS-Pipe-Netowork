@@ -129,42 +129,6 @@
         display: none !important; /* Hide the default Leaflet layers toggle */
     }
 
-    /* Responsive adjustments for smaller screens (e.g., mobile) */
-    @media (max-width: 768px) {
-        #header { font-size: 18px; padding: 10px; }
-        #map { top: 44px; } /* Adjust map top if header height changes */
-
-        /* Sidebar: Takes more width when open, fixed tab width when collapsed */
-        .leaflet-sidebar { width: 80vw !important; }
-        .leaflet-sidebar.collapsed { width: 50px !important; }
-        .leaflet-sidebar-tabs a { width:50px; height:50px; line-height:50px; }
-
-        /* Search Control: Adjust width to be more flexible */
-        .leaflet-control-search {
-            width: calc(100vw - 60px); /* Fill most of the screen width, considering margins */
-            left: 10px;
-            right: 10px;
-            max-width: 300px; /* Prevent it from getting too wide on slightly larger mobiles */
-        }
-        .leaflet-control-search .search-input {
-            font-size: 14px; /* Smaller font for search input */
-        }
-
-        /* Legend: Adjust width to be more flexible */
-        .legend {
-            width: calc(100% - 20px);
-            max-width: 280px;
-            right: 10px;
-            bottom: 10px;
-            font-size: 13px;
-        }
-
-        /* Adjust positions of other controls if they conflict */
-        .leaflet-control-zoom { top: 60px !important; right: 10px !important; }
-        .leaflet-top.leaflet-right { top: 60px !important; right: 10px !important; } /* For locate control */
-        .leaflet-bottom.leaflet-left { margin-left: 10px !important; margin-bottom: 10px !important; } /* For scale control, ensure it's not hidden by sidebar */
-    }
-
   </style>
 </head>
 <body>
@@ -346,11 +310,7 @@
      */
     function setupSidebar() {
         sidebar = L.control.sidebar({ container: 'sidebar', autopan: true }).addTo(map);
-
-        // Open sidebar on larger screens, keep collapsed on smaller screens
-        if (window.innerWidth > 768) {
-            sidebar.open('layers');
-        }
+        sidebar.open('layers');
     }
 
     /**
