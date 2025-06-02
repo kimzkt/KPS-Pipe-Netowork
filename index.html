@@ -67,6 +67,7 @@
     }
 
     .legend { position:absolute; bottom:20px; right:10px; background:#fff; padding:8px; font-size:14px; border-radius:4px; box-shadow:0 0 6px rgba(0,0,0,0.3); width:260px; }
+    .legend-title { font-weight: bold; text-align: center; margin-bottom: 8px; font-size: 16px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px; }
     .legend-item { display:flex; align-items:center; margin-bottom:6px; white-space:nowrap; }
     .legend-item:last-child { margin-bottom:0; }
     .legend i { width:18px; height:18px; margin-right:8px; border:1px solid #000; }
@@ -591,6 +592,7 @@
         legend.onAdd = () => {
             const div = L.DomUtil.create('div', 'legend');
             div.innerHTML = `
+                <div class="legend-title">កំណត់សម្គាល់</div>
                 <div class="legend-item"><i style="background:${config.layerStyles.existingPipe.color}; border:1px solid black;"></i> បណ្តាញទុយោបច្ចុប្បន្ន</div>
                 <div class="legend-item"><i style="background:${config.layerStyles.newPipe.color}; border:1px solid black;"></i> បណ្តាញទុយោពង្រីក</div>
                 <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterSource.fillColor}; border-color:${config.layerStyles.waterSource.color};"></i> ទីតាំងប្រភពទឹក</div>
@@ -608,7 +610,7 @@
         addMapControls();
         setupSidebar();
         createGeoJSONLayers();
-        populateLayerList(); // Now populates both overlays and base maps
+        populateLayerList();
         await loadGeojsonData();
         setupSearchControl();
         createLegend();
