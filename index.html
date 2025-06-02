@@ -120,7 +120,7 @@
         border-bottom: none;
     }
 
-    /* --- Custom Styles for L.Control.Layers with image and text --- */
+    /* --- Custom Styles for L.Control.Layers with image and no text --- */
     .leaflet-control-layers {
         box-shadow: 0 1px 5px rgba(0,0,0,0.4);
         background: #fff;
@@ -129,20 +129,18 @@
         margin-right: 10px; /* Adjust spacing from right if needed */
     }
 
-    /* Style the toggle button with your image and text */
+    /* Style the toggle button with your image and no text */
     .leaflet-control-layers-toggle {
         background-image: none !important; /* Remove any default Leaflet image */
         background-color: #fff; /* Ensure white background */
         border-radius: 4px;
-        width: max-content; /* Ensures it expands to fit content */
-        box-sizing: border-box; /* Ensures padding is included in width */
+        width: 40px; /* Fixed width to fit just the image */
         height: 40px; /* Fixed height for consistent button size */
-        line-height: 40px; /* Vertically center content */
         cursor: pointer;
-        display: flex !important; /* Use flexbox for image and text alignment */
+        display: flex !important; /* Use flexbox for image centering */
         align-items: center; /* Center items vertically */
-        justify-content: flex-start; /* Align content to the left */
-        padding: 0 10px; /* Padding inside the button */
+        justify-content: center; /* Center image horizontally */
+        padding: 0; /* No padding needed around the image itself */
         box-shadow: none; /* No additional shadow on the toggle button itself */
     }
 
@@ -153,15 +151,14 @@
     .leaflet-control-layers-toggle img {
         width: 32px; /* Size of your image */
         height: 32px; /* Size of your image */
-        margin-right: 8px; /* Space between image and text */
+        margin: 0; /* Remove any margin */
         border-radius: 4px; /* Optional: slight border-radius for the image itself */
         object-fit: cover; /* Ensures image covers the area */
     }
 
+    /* The span for "Layers" text is removed, so no style needed for it */
     .leaflet-control-layers-toggle span {
-        font-size: 14px; /* Adjust font size for "Layers" text */
-        color: #333; /* Color for "Layers" text */
-        white-space: nowrap; /* Prevent text wrap */
+        display: none; /* Ensure text is hidden if accidentally present */
     }
 
     /* Style the labels (Street, Satellite) when the control is expanded */
@@ -285,16 +282,20 @@
         });
 
         // Base Layers control - positioned topright
-        // Removed 'Satellite' option, only 'Street' remains.
-        L.control.layers({ 'Street': osm.addTo(map) }, null, { position: 'topright' }).addTo(map);
+        // Reverted to include both 'Street' and 'Satellite'
+        L.control.layers({ 'Street': osm.addTo(map), 'Satellite': esri }, null, { position: 'topright' }).addTo(map);
 
         // Custom content for the layers toggle button
         const layersToggle = document.querySelector('.leaflet-control-layers-toggle');
         if (layersToggle) {
+            // Only include the image, remove the <span>Layers</span>
             layersToggle.innerHTML = `
                 <img src="./image_9402ec.png" alt="Layers Icon">
-                <span>Layers</span>
             `;
+            // Adjust width and justify-content for image-only display
+            layersToggle.style.width = '40px'; // Set to match its height
+            layersToggle.style.justifyContent = 'center'; // Center the image
+            layersToggle.style.padding = '0'; // Remove padding
         }
     }
 
