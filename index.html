@@ -7,14 +7,11 @@
 
   <link rel="preconnect" href="https://unpkg.com">
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link rel="preconnect" href="https://cdn.jsdelivr.net"> <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-sidebar-v2/css/leaflet-sidebar.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-search/dist/leaflet-search.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-compass@0.7.0/dist/leaflet-compass.min.css">
-
-
   <style>
     body { margin:0; padding:0; font-family:"Khmer OS","Noto Sans Khmer",sans-serif; }
     #header { background:#005cbf; color:#fff; padding:12px; text-align:center; font-size:20px; }
@@ -165,7 +162,8 @@
 
         /* Adjust positions of other controls if they conflict */
         .leaflet-control-zoom { top: 60px !important; right: 10px !important; }
-        .leaflet-top.leaflet-right { top: 60px !important; right: 10px !important; } /* For locate control and compass */
+        /* Adjusted for locate control */
+        .leaflet-top.leaflet-right { top: 60px !important; right: 10px !important; }
         .leaflet-bottom.leaflet-left { margin-left: 10px !important; margin-bottom: 10px !important; } /* For scale control, ensure it's not hidden by sidebar */
     }
 
@@ -204,8 +202,6 @@
   <script src="https://unpkg.com/leaflet-search/dist/leaflet-search.min.js"></script>
   <script src="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/leaflet-compass@0.7.0/dist/leaflet-compass.min.js"></script>
-
   <script>
     // Configuration Object
     const config = {
@@ -254,10 +250,6 @@
                 maxZoom: 19
             })
         }
-        // Add more base maps here if needed, e.g., 'Terrain', 'Light', 'Dark'
-        // 'Terrain': { layer: L.tileLayer('YOUR_TERRAIN_TILE_URL', { attribution: 'YOUR_ATTRIBUTION' }) },
-        // 'Light': { layer: L.tileLayer('YOUR_LIGHT_TILE_URL', { attribution: 'YOUR_ATTRIBUTION' }) },
-        // 'Dark': { layer: L.tileLayer('YOUR_DARK_TILE_URL', { attribution: 'YOUR_ATTRIBUTION' }) }
     };
 
     /**
@@ -300,15 +292,6 @@
      */
     function addMapControls() {
         L.control.zoom({ position: 'topright' }).addTo(map);
-
-        // Add Leaflet Compass (North Arrow)
-        L.control.compass({
-            position: 'topright', // Position of the compass control
-            // You can customize the icon here if you want a different one,
-            // for example, using a Font Awesome icon directly:
-            // forceInheritIcon: true, // If using Font Awesome directly in the icon
-            // icon: 'fa fa-solid fa-location-arrow' // Example Font Awesome icon
-        }).addTo(map);
 
         // Standard Leaflet Scale Control
         L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
