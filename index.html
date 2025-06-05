@@ -38,7 +38,7 @@
         position: absolute;
         top: 10px;
         left: 10px;
-        z-index: 999;
+        z-index: 999; /* Ensure search is above most things */
         background: #fff;
         border-radius: 4px;
         box-shadow: 0 1px 5px rgba(0,0,0,0.4);
@@ -54,6 +54,7 @@
         padding: 6px;
         font-size: 16px;
         outline: none;
+        border-radius: 4px; /* Keep this if results are not directly attached or if you want standalone rounded input */
     }
 
     .leaflet-control-search .search-button {
@@ -68,6 +69,58 @@
     .leaflet-control-search .search-button:hover {
         color: #000;
     }
+
+    /* NEW: Styles for the search results dropdown */
+    .leaflet-control-search .search-tooltip {
+        background-color: #ffffff;
+        border: 1px solid #ccc;
+        border-top: none;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        border-radius: 0 0 4px 4px; /* Rounded bottom corners */
+        max-height: 200px; /* Limit height and add scroll */
+        overflow-y: auto;
+        padding: 0;
+        list-style: none;
+        position: absolute; /* Position it relative to the search control */
+        top: 100%; /* Display below the input */
+        left: 0;
+        right: 0;
+        z-index: 1000; /* Ensure results are above other map elements but below search input if overlapping */
+    }
+
+    /* NEW: Styles for individual search result items */
+    .leaflet-control-search .search-tip {
+        display: block;
+        padding: 8px 12px;
+        color: #333;
+        text-decoration: none;
+        font-size: 14px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .leaflet-control-search .search-tip:last-child {
+        border-bottom: none;
+    }
+
+    .leaflet-control-search .search-tip:hover,
+    .leaflet-control-search .search-tip.selected { /* 'selected' class for keyboard nav highlight */
+        background-color: #f0f0f0;
+        color: #000;
+    }
+
+    /* NEW: Style for "No results found" message */
+    .leaflet-control-search .search-alert {
+        padding: 8px 12px;
+        color: #777;
+        font-style: italic;
+        font-size: 14px;
+        text-align: center;
+    }
+
 
     .legend { position:absolute; bottom:20px; right:10px; background:#fff; padding:8px; font-size:14px; border-radius:4px; box-shadow:0 0 6px rgba(0,0,0,0.3); width:260px; z-index: 990; }
     .legend-title { font-weight: bold; text-align: center; margin-bottom: 8px; font-size: 16px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px; }
@@ -165,14 +218,20 @@
 
         /* Search Control: Adjust width to be more flexible */
         .leaflet-control-search {
-            /* top: 10px; is inherited */
             left: 10px;
-            right: 10px; /* Stretches between 10px from left and 10px from right of the map container */
-            width: auto;  /* Allow left/right to determine width */
-            max-width: 300px; /* Cap its width if the available space (viewport_width - 20px) is > 300px */
+            right: 10px;
+            width: auto;
+            max-width: 300px;
         }
         .leaflet-control-search .search-input {
             font-size: 14px;
+        }
+        .leaflet-control-search .search-tooltip {
+            max-height: 150px; /* Shorter list on mobile */
+        }
+        .leaflet-control-search .search-tip {
+            font-size: 13px;
+            padding: 6px 10px;
         }
 
         .legend {
@@ -184,7 +243,7 @@
         }
 
         .leaflet-top.leaflet-right {
-            top: 60px !important;
+            top: 60px !important; /* Adjusted to make space if search results are tall */
             right: 10px !important;
         }
         .leaflet-top.leaflet-right .leaflet-control {
@@ -255,14 +314,13 @@
         mapCenter: [11.4, 104.5],
         initialZoom: 10,
         github: {
-            // !!! IMPORTANT: REPLACE THESE WITH YOUR ACTUAL GITHUB DETAILS !!!
-            username: 'YOUR_GITHUB_USERNAME',
-            repo: 'YOUR_GITHUB_REPO_NAME',
+            username: 'YOUR_GITHUB_USERNAME', // <<<--- REPLACE
+            repo: 'YOUR_GITHUB_REPO_NAME',   // <<<--- REPLACE
             branch: 'main'
         },
         layerStyles: {
             existingPipe: { color: '#000000', weight: 2 },
-            newPipe: { color: 'white', weight: 2 },
+            newPipe: { color: 'white', weight: 2 }, // Note: White pipes might be hard to see on light basemaps
             waterSource: { radius: 6, fillColor: '#3498db', color: '#2980b9', fillOpacity: 0.8, weight: 1 },
             waterTreatmentPlant: { radius: 6, fillColor: '#f1c40f', color: '#d4ac0d', fillOpacity: 0.8, weight: 1 },
             countryBoundary: {
@@ -300,9 +358,8 @@
         }
     };
 
-    // Define ScaleDenominator Control Class and Factory Globally
     const ScaleDen = L.Control.extend({
-        options: { position: 'bottomleft' }, // Default, can be overridden
+        options: { position: 'bottomleft' },
         onAdd: function(mapInstance) {
             this._div = L.DomUtil.create('div', 'leaflet-control-scale-denominator');
             mapInstance.on('zoomend moveend', this._updateScaleDenominator, this);
@@ -310,11 +367,11 @@
             return this._div;
         },
         _updateScaleDenominator: function() {
-            if (!map) return; // Guard clause if map is not yet initialized
+            if (!map) return;
             const lat = map.getCenter().lat;
             const z = map.getZoom();
             const mpp = 156543.0339 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);
-            const scale = mpp * 96 / 0.0254; // 96 DPI, 0.0254 meters per inch
+            const scale = mpp * 96 / 0.0254;
             this._div.innerHTML = 'មាត្រដ្ឋាន៖ 1:' + Math.round(scale).toLocaleString();
         }
     });
@@ -345,9 +402,7 @@
 
     function addMapControls() {
         L.control.zoom({ position: 'topright' }).addTo(map);
-        // Add primary scale bar to bottomleft
         L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
-        // Scale Denominator will be added by addScaleDenominatorControl() later for ordering
 
         L.control.locate({
             position: 'topright',
@@ -372,43 +427,44 @@
         }
     }
 
+    const MousePosition = L.Control.extend({
+        options: {
+            position: 'bottomleft',
+            prefix: "កូអរដោនេ៖ "
+        },
+        onAdd: function (map) {
+            this._container = L.DomUtil.create('div', 'leaflet-control-mouseposition');
+            L.DomEvent.disableClickPropagation(this._container);
+            L.DomEvent.disableScrollPropagation(this._container);
+            map.on('mousemove', this._onMouseMove, this);
+            map.on('mouseout', this._onMouseOut, this);
+            this._container.innerHTML = this.options.prefix + 'N/A';
+            return this._container;
+        },
+        onRemove: function (map) {
+            map.off('mousemove', this._onMouseMove, this);
+            map.off('mouseout', this._onMouseOut, this);
+        },
+        _onMouseMove: function (e) {
+            const lat = e.latlng.lat.toFixed(5);
+            const lng = e.latlng.lng.toFixed(5);
+            this._container.innerHTML = `${this.options.prefix}${lat}, ${lng}`;
+        },
+        _onMouseOut: function (e) {
+            this._container.innerHTML = this.options.prefix + 'N/A';
+        }
+    });
+    L.control.mousePosition = function(opts) { return new MousePosition(opts); }
+
     function addMousePositionControl() {
-        const MousePosition = L.Control.extend({
-            options: {
-                position: 'bottomleft',
-                prefix: "កូអរដោនេ៖ " // Coordinates: in Khmer
-            },
-            onAdd: function (map) {
-                this._container = L.DomUtil.create('div', 'leaflet-control-mouseposition');
-                L.DomEvent.disableClickPropagation(this._container);
-                L.DomEvent.disableScrollPropagation(this._container);
-                map.on('mousemove', this._onMouseMove, this);
-                map.on('mouseout', this._onMouseOut, this);
-                this._container.innerHTML = this.options.prefix + 'N/A';
-                return this._container;
-            },
-            onRemove: function (map) {
-                map.off('mousemove', this._onMouseMove, this);
-                map.off('mouseout', this._onMouseOut, this);
-            },
-            _onMouseMove: function (e) {
-                const lat = e.latlng.lat.toFixed(5);
-                const lng = e.latlng.lng.toFixed(5);
-                this._container.innerHTML = `${this.options.prefix}${lat}, ${lng}`;
-            },
-            _onMouseOut: function (e) {
-                this._container.innerHTML = this.options.prefix + 'N/A';
-            }
-        });
-        L.control.mousePosition = function(opts) { return new MousePosition(opts); }
-        L.control.mousePosition().addTo(map); // Adds to bottomleft
+        L.control.mousePosition().addTo(map);
     }
 
     function addScaleDenominatorControl() {
         if (L.control.scaleDenominator) {
-            L.control.scaleDenominator({ position: 'bottomleft' }).addTo(map); // Adds to bottomleft
+            L.control.scaleDenominator({ position: 'bottomleft' }).addTo(map);
         } else {
-            console.error("L.control.scaleDenominator factory not initialized. Cannot add scale denominator.");
+            console.error("L.control.scaleDenominator factory not initialized.");
         }
     }
 
@@ -588,10 +644,14 @@
                     const properties = feature.properties || {};
 
                     if (geometryType && /LineString|MultiLineString/.test(geometryType)) {
-                        if (properties.diameter !== undefined && properties.diameter !== null) {
+                        // Assuming 'diameter' indicates existing, lack of it means new. Adjust if needed.
+                        if (properties.status && String(properties.status).toLowerCase() === 'existing') {
                             existingLayer.addData(feature);
-                        } else {
+                        } else if (properties.status && String(properties.status).toLowerCase() === 'new') {
                             newLayer.addData(feature);
+                        } else { // Fallback or default classification
+                             // Decide where unclassified pipes go, e.g., newLayer
+                             newLayer.addData(feature);
                         }
                     } else if (geometryType === 'Point') {
                         const name = (properties.name || '').toUpperCase();
@@ -614,19 +674,21 @@
         allPointFeatures = L.featureGroup([wsLayer, wtpLayer]);
         const searchControl = new L.Control.Search({
             layer: allPointFeatures,
-            propertyName: 'name',
-            collapsed: false,
-            textPlaceholder: 'ស្វែងរក...',
-            marker: false,
-            inputClasses: 'search-input',
-            buttonClasses: 'search-button',
+            propertyName: 'name',      // Search within the 'name' property of features
+            collapsed: false,          // Search box starts expanded
+            textPlaceholder: 'ស្វែងរក...', // Placeholder text in Khmer
+            marker: false,             // Don't add a new marker for results, just pan
+            inputClasses: 'search-input', // Custom class for styling input
+            buttonClasses: 'search-button', // Custom class for styling button
             moveToLocation: (latlng, title, originalLayer) => {
-                map.setView(latlng, 14);
+                map.setView(latlng, 14); // Zoom level 14 when a result is selected
                 if (originalLayer && originalLayer.getPopup && typeof originalLayer.isPopupOpen === 'function' && !originalLayer.isPopupOpen()) {
-                    originalLayer.openPopup();
+                    originalLayer.openPopup(); // Open the feature's popup
                 }
             },
-            initial: false
+            initial: false, // IMPORTANT: false enables substring search (searches anywhere in the string)
+                           // true or '^' would search only from the beginning of the string.
+            minLength: 1    // Start searching after 1 character is typed
         });
         map.addControl(searchControl);
     }
@@ -635,13 +697,14 @@
         const legend = L.control({ position: 'bottomright' });
         legend.onAdd = () => {
             const div = L.DomUtil.create('div', 'legend');
+            // Note for newPipe: white line with black border for visibility on light maps
             div.innerHTML = `
                 <div class="legend-title">កំណត់សម្គាល់</div>
-                <div class="legend-item"><i style="background:${config.layerStyles.existingPipe.color}; border:1px solid #333;"></i> បណ្តាញទុយោបច្ចុប្បន្ន</div>
+                <div class="legend-item"><i style="background:${config.layerStyles.existingPipe.color};"></i> បណ្តាញទុយោបច្ចុប្បន្ន</div>
                 <div class="legend-item"><i style="background:${config.layerStyles.newPipe.color}; border:1px solid black;"></i> បណ្តាញទុយោពង្រីក</div>
                 <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterSource.fillColor}; border-color:${config.layerStyles.waterSource.color};"></i> ទីតាំងប្រភពទឹក</div>
                 <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterTreatmentPlant.fillColor}; border-color:${config.layerStyles.waterTreatmentPlant.color};"></i> ទីតាំងស្ថានីយទឹកស្អាត</div>
-                <div class="legend-item"><i style="background:transparent; border:1px solid ${config.layerStyles.countryBoundary.color};"></i> ព្រំដែនប្រទេស</div>
+                <div class="legend-item"><i style="background:transparent; border:2px solid ${config.layerStyles.countryBoundary.color};"></i> ព្រំដែនប្រទេស</div>
             `;
             return div;
         };
@@ -650,16 +713,17 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
         initializeMap();
-        // Order of adding controls to 'bottomleft' matters for stacking:
-        addMapControls();             // Adds L.control.scale (primary scale bar)
-        addMousePositionControl();    // Adds mouse coordinate display
-        addScaleDenominatorControl(); // Adds scale denominator (e.g., 1:50000)
+        addMapControls();
+        addMousePositionControl();
+        addScaleDenominatorControl();
         
         setupSidebar();
-        createGeoJSONLayers();
+        createGeoJSONLayers(); // Create layers before loading data into them
         populateLayerList();
-        await loadGeojsonData();
-        setupSearchControl();
+        
+        await loadGeojsonData(); // Load data AFTER layers are created
+        
+        setupSearchControl(); // Setup search AFTER layers have data
         createLegend();
     });
   </script>
