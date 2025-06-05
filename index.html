@@ -255,6 +255,7 @@
         mapCenter: [11.4, 104.5],
         initialZoom: 10,
         github: {
+            // !!! IMPORTANT: REPLACE THESE WITH YOUR ACTUAL GITHUB DETAILS !!!
             username: 'YOUR_GITHUB_USERNAME',
             repo: 'YOUR_GITHUB_REPO_NAME',
             branch: 'main'
@@ -276,6 +277,7 @@
         },
     };
 
+    // Global map variables
     let map;
     let sidebar;
     let existingLayer, newLayer, wsLayer, wtpLayer, countryBoundaryLayer;
@@ -298,8 +300,9 @@
         }
     };
 
+    // Define ScaleDenominator Control Class and Factory Globally
     const ScaleDen = L.Control.extend({
-        options: { position: 'bottomleft' },
+        options: { position: 'bottomleft' }, // Default, can be overridden
         onAdd: function(mapInstance) {
             this._div = L.DomUtil.create('div', 'leaflet-control-scale-denominator');
             mapInstance.on('zoomend moveend', this._updateScaleDenominator, this);
@@ -307,19 +310,24 @@
             return this._div;
         },
         _updateScaleDenominator: function() {
-            if (!map) return;
+            if (!map) return; // Guard clause if map is not yet initialized
             const lat = map.getCenter().lat;
             const z = map.getZoom();
             const mpp = 156543.0339 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);
-            const scale = mpp * 96 / 0.0254;
+            const scale = mpp * 96 / 0.0254; // 96 DPI, 0.0254 meters per inch
             this._div.innerHTML = 'មាត្រដ្ឋាន៖ 1:' + Math.round(scale).toLocaleString();
         }
     });
     L.control.scaleDenominator = (opts) => new ScaleDen(opts);
 
 
-    function showLoadingSpinner() { document.getElementById('loading-spinner').style.display = 'block'; }
-    function hideLoadingSpinner() { document.getElementById('loading-spinner').style.display = 'none'; }
+    function showLoadingSpinner() {
+        document.getElementById('loading-spinner').style.display = 'block';
+    }
+
+    function hideLoadingSpinner() {
+        document.getElementById('loading-spinner').style.display = 'none';
+    }
 
     function initializeMap() {
         map = L.map('map', { zoomControl: false }).setView(config.mapCenter, config.initialZoom);
@@ -330,30 +338,34 @@
             }
         }
         const layersToggle = document.querySelector('.leaflet-control-layers-toggle');
-        if (layersToggle) layersToggle.style.display = 'none';
+        if (layersToggle) {
+            layersToggle.style.display = 'none';
+        }
     }
 
-    // Function to add the primary graphical scale bar
-    function addPrimaryScaleControl() {
-        L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
-    }
-
-    function addMapControls() { // This function now adds controls NOT in bottom-left or those whose order isn't critical with scale/coords
+    function addMapControls() {
         L.control.zoom({ position: 'topright' }).addTo(map);
-        // L.control.scale() is now added by addPrimaryScaleControl() for specific ordering
+        // Add primary scale bar to bottomleft
+        L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
+        // Scale Denominator will be added by addScaleDenominatorControl() later for ordering
 
         L.control.locate({
             position: 'topright',
             strings: { title: 'ស្វែងរកទីតាំង​របស់ខ្ញុំ' },
-            drawCircle: true, follow: true, setView: 'untilPan',
+            drawCircle: true,
+            follow: true,
+            setView: 'untilPan',
             markerStyle: { fillColor: '#1a73e8', color: '#fff', weight: 2, opacity: 1, fillOpacity: 0.8 },
             circleStyle: { color: '#1a73e8', fillColor: '#1a73e8', fillOpacity: 0.1, weight: 1 }
         }).addTo(map);
 
         if (L.control.compass) {
             L.control.compass({
-                position: 'topright', autoActive: true, showDigit: false,
-                textErr: 'Compass N/A', title: 'ទិសដៅ (Compass)'
+                position: 'topright',
+                autoActive: true,
+                showDigit: false,
+                textErr: 'Compass N/A',
+                title: 'ទិសដៅ (Compass)'
             }).addTo(map);
         } else {
             console.warn("Leaflet Compass plugin not loaded.");
@@ -362,7 +374,10 @@
 
     function addMousePositionControl() {
         const MousePosition = L.Control.extend({
-            options: { position: 'bottomleft', prefix: "កូអរដោនេ៖ " },
+            options: {
+                position: 'bottomleft',
+                prefix: "កូអរដោនេ៖ " // Coordinates: in Khmer
+            },
             onAdd: function (map) {
                 this._container = L.DomUtil.create('div', 'leaflet-control-mouseposition');
                 L.DomEvent.disableClickPropagation(this._container);
@@ -377,108 +392,268 @@
                 map.off('mouseout', this._onMouseOut, this);
             },
             _onMouseMove: function (e) {
-                this._container.innerHTML = `${this.options.prefix}${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+                const lat = e.latlng.lat.toFixed(5);
+                const lng = e.latlng.lng.toFixed(5);
+                this._container.innerHTML = `${this.options.prefix}${lat}, ${lng}`;
             },
-            _onMouseOut: function (e) { this._container.innerHTML = this.options.prefix + 'N/A'; }
+            _onMouseOut: function (e) {
+                this._container.innerHTML = this.options.prefix + 'N/A';
+            }
         });
         L.control.mousePosition = function(opts) { return new MousePosition(opts); }
-        L.control.mousePosition().addTo(map);
+        L.control.mousePosition().addTo(map); // Adds to bottomleft
     }
 
     function addScaleDenominatorControl() {
         if (L.control.scaleDenominator) {
-            L.control.scaleDenominator({ position: 'bottomleft' }).addTo(map);
+            L.control.scaleDenominator({ position: 'bottomleft' }).addTo(map); // Adds to bottomleft
         } else {
-            console.error("L.control.scaleDenominator factory not initialized.");
+            console.error("L.control.scaleDenominator factory not initialized. Cannot add scale denominator.");
         }
     }
 
     function setupSidebar() {
         sidebar = L.control.sidebar({ container: 'sidebar', autopan: true }).addTo(map);
-        if (window.innerWidth > 768) sidebar.open('layers');
+        if (window.innerWidth > 768) {
+            sidebar.open('layers');
+        }
     }
 
     function createGeoJSONLayers() {
-        countryBoundaryLayer = L.geoJSON(null, { style: config.layerStyles.countryBoundary, interactive: false });
-        const createPipePopup = (f) => {
-            const p = f.properties||{}; let h=`<b>Pipe Details</b><hr><table>`;
-            if(p.pipe_code)h+=`<tr><th>Pipe Code</th><td>${p.pipe_code}</td></tr>`;
-            if(p.diameter!=null)h+=`<tr><th>Diameter</th><td>${p.diameter} mm</td></tr>`;
-            if(p.length!=null)h+=`<tr><th>Length</th><td>${parseFloat(p.length).toFixed(2)} m</td></tr>`;
-            if(p.material)h+=`<tr><th>Material</th><td>${p.material}</td></tr>`;
-            if(p.status)h+=`<tr><th>Status</th><td>${p.status}</td></tr>`;
-            if(p.installation_year)h+=`<tr><th>Installed</th><td>${p.installation_year}</td></tr>`;
-            return h+='</table>';
+        countryBoundaryLayer = L.geoJSON(null, {
+            style: config.layerStyles.countryBoundary,
+            interactive: false,
+        });
+
+        const createPipePopup = (feature) => {
+            const props = feature.properties || {};
+            let html = `<b>Pipe Details</b><hr>`;
+            html += '<table>';
+            if (props.pipe_code) html += `<tr><th>Pipe Code</th><td>${props.pipe_code}</td></tr>`;
+            if (props.diameter !== undefined && props.diameter !== null) html += `<tr><th>Diameter</th><td>${props.diameter} mm</td></tr>`;
+            if (props.length !== undefined && props.length !== null) html += `<tr><th>Length</th><td>${parseFloat(props.length).toFixed(2)} m</td></tr>`;
+            if (props.material) html += `<tr><th>Material</th><td>${props.material}</td></tr>`;
+            if (props.status) html += `<tr><th>Status</th><td>${props.status}</td></tr>`;
+            if (props.installation_year) html += `<tr><th>Installed</th><td>${props.installation_year}</td></tr>`;
+            html += '</table>';
+            return html;
         };
-        existingLayer = L.geoJSON(null, { style: config.layerStyles.existingPipe, onEachFeature:(f,l)=>l.bindPopup(createPipePopup(f)) });
-        newLayer = L.geoJSON(null, { style: config.layerStyles.newPipe, onEachFeature:(f,l)=>l.bindPopup(createPipePopup(f)) });
-        wsLayer = L.geoJSON(null, { pointToLayer:(f,ll)=>L.circleMarker(ll,config.layerStyles.waterSource), onEachFeature:(f,l)=>{
-            const p=f.properties||{}; let h=`<b>${p.name||'Unnamed WS'}</b><hr><table>`;
-            for(const k in p) if(p.hasOwnProperty(k)&&typeof p[k]!='object'&&k!='name')h+=`<tr><th>${k}</th><td>${p[k]}</td></tr>`;
-            l.bindPopup(h+'</table>'); }});
-        wtpLayer = L.geoJSON(null, { pointToLayer:(f,ll)=>L.circleMarker(ll,config.layerStyles.waterTreatmentPlant), onEachFeature:(f,l)=>{
-            const p=f.properties||{}; let h=`<b>${p.name||'Unnamed WTP'}</b><hr><table>`;
-            for(const k in p) if(p.hasOwnProperty(k)&&typeof p[k]!='object'&&k!='name')h+=`<tr><th>${k}</th><td>${p[k]}</td></tr>`;
-            l.bindPopup(h+'</table>'); }});
-        [countryBoundaryLayer, existingLayer, newLayer, wsLayer, wtpLayer].forEach(l => l.addTo(map));
+
+        existingLayer = L.geoJSON(null, {
+            style: config.layerStyles.existingPipe,
+            onEachFeature: (feature, layer) => layer.bindPopup(createPipePopup(feature))
+        });
+
+        newLayer = L.geoJSON(null, {
+            style: config.layerStyles.newPipe,
+            onEachFeature: (feature, layer) => layer.bindPopup(createPipePopup(feature))
+        });
+
+        wsLayer = L.geoJSON(null, {
+            pointToLayer: (feature, latlng) => L.circleMarker(latlng, config.layerStyles.waterSource),
+            onEachFeature: (feature, layer) => {
+                const properties = feature.properties || {};
+                let html = `<b>${properties.name || 'Unnamed Water Source'}</b><hr><table>`;
+                for (const key in properties) {
+                    if (properties.hasOwnProperty(key) && typeof properties[key] !== 'object' && key !== 'name') {
+                        html += `<tr><th>${key}</th><td>${properties[key]}</td></tr>`;
+                    }
+                }
+                html += '</table>';
+                layer.bindPopup(html);
+            }
+        });
+
+        wtpLayer = L.geoJSON(null, {
+            pointToLayer: (feature, latlng) => L.circleMarker(latlng, config.layerStyles.waterTreatmentPlant),
+            onEachFeature: (feature, layer) => {
+                const properties = feature.properties || {};
+                let html = `<b>${properties.name || 'Unnamed Water Treatment Plant'}</b><hr><table>`;
+                for (const key in properties) {
+                     if (properties.hasOwnProperty(key) && typeof properties[key] !== 'object' && key !== 'name') {
+                        html += `<tr><th>${key}</th><td>${properties[key]}</td></tr>`;
+                    }
+                }
+                html += '</table>';
+                layer.bindPopup(html);
+            }
+        });
+
+        countryBoundaryLayer.addTo(map);
+        existingLayer.addTo(map);
+        newLayer.addTo(map);
+        wsLayer.addTo(map);
+        wtpLayer.addTo(map);
     }
 
     function populateLayerList() {
-        const overlays={'បណ្តាញទុយោបច្ចុប្បន្ន':existingLayer,'បណ្តាញទុយោពង្រីក':newLayer,'ទីតាំងប្រភពទឹក':wsLayer,'ទីតាំងស្ថានីយទឹកស្អាត':wtpLayer,'ព្រំដែនប្រទេស':countryBoundaryLayer};
-        const llDiv=document.getElementById('layer-list');
-        Object.keys(overlays).forEach(n=>{const d=document.createElement('div');d.className='layer-checkbox';const i=document.createElement('input');i.type='checkbox';i.checked=true;i.id=`overlay-${n.replace(/\s/g,'-')}`;i.onchange=()=>map[i.checked?'addLayer':'removeLayer'](overlays[n]);const l=document.createElement('label');l.htmlFor=i.id;l.innerText=n;d.append(i,l);llDiv.appendChild(d);});
-        const bmDiv=document.getElementById('base-map-list');
-        Object.keys(baseLayersConfig).forEach(n=>{const d=document.createElement('div');d.className='base-map-radio';const i=document.createElement('input');i.type='radio';i.name='base-map';i.id=`base-${n.replace(/\s/g,'-')}`;i.checked=!!baseLayersConfig[n].default;i.onchange=()=>{if(map.hasLayer(currentBaseLayer))map.removeLayer(currentBaseLayer);currentBaseLayer=baseLayersConfig[n].layer.addTo(map);};const l=document.createElement('label');l.htmlFor=i.id;l.innerText=n;d.append(i,l);bmDiv.appendChild(d);});
+        const overlays = {
+            'បណ្តាញទុយោបច្ចុប្បន្ន': existingLayer,
+            'បណ្តាញទុយោពង្រីក': newLayer,
+            'ទីតាំងប្រភពទឹក': wsLayer,
+            'ទីតាំងស្ថានីយទឹកស្អាត': wtpLayer,
+            'ព្រំដែនប្រទេស': countryBoundaryLayer
+        };
+
+        const layerListDiv = document.getElementById('layer-list');
+        Object.keys(overlays).forEach(name => {
+            const div = document.createElement('div');
+            div.className = 'layer-checkbox';
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.checked = true;
+            input.id = `overlay-${name.replace(/\s/g, '-')}`;
+            input.onchange = () => map[input.checked ? 'addLayer' : 'removeLayer'](overlays[name]);
+            const label = document.createElement('label');
+            label.htmlFor = input.id;
+            label.innerText = name;
+            div.append(input, label);
+            layerListDiv.appendChild(div);
+        });
+
+        const baseMapListDiv = document.getElementById('base-map-list');
+        Object.keys(baseLayersConfig).forEach(name => {
+            const div = document.createElement('div');
+            div.className = 'base-map-radio';
+            const input = document.createElement('input');
+            input.type = 'radio';
+            input.name = 'base-map';
+            input.id = `base-${name.replace(/\s/g, '-')}`;
+            input.checked = baseLayersConfig[name].default || false;
+            input.onchange = () => {
+                if (map.hasLayer(currentBaseLayer)) map.removeLayer(currentBaseLayer);
+                currentBaseLayer = baseLayersConfig[name].layer.addTo(map);
+            };
+            const label = document.createElement('label');
+            label.htmlFor = input.id;
+            label.innerText = name;
+            div.append(input, label);
+            baseMapListDiv.appendChild(div);
+        });
     }
 
     async function loadGeojsonData() {
         showLoadingSpinner();
-        const {username,repo,branch}=config.github; let eu=username,er=repo;
-        if(eu==='YOUR_GITHUB_USERNAME'||er==='YOUR_GITHUB_REPO_NAME'){try{const p=location.pathname.split('/').filter(Boolean);if(location.host.includes('github.io')){eu=location.host.split('.')[0];er=p.length>0?p[0]:(eu+".github.io");}else if(location.protocol==='file:'&&p.length>=3){eu=p[p.length-3];er=p[p.length-2];}}catch(e){console.warn("Could not infer GitHub user/repo.",e);}}
-        if(eu==='YOUR_GITHUB_USERNAME'||er==='YOUR_GITHUB_REPO_NAME'){console.error("CRITICAL: GitHub user/repo placeholder.");alert("Config Error: Update GitHub user/repo.");hideLoadingSpinner();return;}
-        try{const r=await fetch(`https://api.github.com/repos/${eu}/${er}/contents?ref=${branch}`);if(!r.ok)throw new Error(`GitHub API HTTP error! ${r.status} (User:${eu},Repo:${er})`);
-            const files=await r.json(); const gf=files.filter(f=>f.type==='file'&&/\.(geojson|json)$/i.test(f.name));
-            if(gf.length===0){console.warn("No GeoJSON files.");hideLoadingSpinner();return;}
-            for(const file of gf){const dr=await fetch(`https://raw.githubusercontent.com/${eu}/${er}/${branch}/${file.name}`);if(!dr.ok){console.warn(`Failed to load ${file.name}: ${dr.status}`);continue;}
-                const data=await dr.json();const feats=data.features&&Array.isArray(data.features)?data.features:Array.isArray(data)?data:[];
-                feats.forEach(feat=>{const gt=feat.geometry&&feat.geometry.type;const p=feat.properties||{};
-                    if(gt&&/LineString|MultiLineString/.test(gt)){(p.diameter!=null)?existingLayer.addData(feat):newLayer.addData(feat);}
-                    else if(gt==='Point'){const n=(p.name||'').toUpperCase();if(n.includes('WS'))wsLayer.addData(feat);else if(n.includes('WTP'))wtpLayer.addData(feat);}
-                    else if(gt&&/Polygon|MultiPolygon/.test(gt)){countryBoundaryLayer.addData(feat);}});}
-        }catch(err){console.error("Error loading GeoJSON:",err);alert(`Failed to load map data. Error: ${err.message}`);}finally{hideLoadingSpinner();}}
+        const { username, repo, branch } = config.github;
+        let effectiveUser = username;
+        let effectiveRepo = repo;
+
+        if (username === 'YOUR_GITHUB_USERNAME' || repo === 'YOUR_GITHUB_REPO_NAME') {
+            try {
+                const urlPathParts = location.pathname.split('/').filter(Boolean);
+                if (location.host.includes('github.io')) {
+                     effectiveUser = location.host.split('.')[0];
+                     effectiveRepo = urlPathParts.length > 0 ? urlPathParts[0] : (effectiveUser + ".github.io");
+                } else if (location.protocol === 'file:' && urlPathParts.length >= 3) {
+                    effectiveUser = urlPathParts[urlPathParts.length - 3];
+                    effectiveRepo = urlPathParts[urlPathParts.length - 2];
+                }
+            } catch (e) {
+                console.warn("Could not infer GitHub user/repo from URL, using placeholders if not replaced.", e);
+            }
+        }
+
+        if (effectiveUser === 'YOUR_GITHUB_USERNAME' || effectiveRepo === 'YOUR_GITHUB_REPO_NAME') {
+            console.error("CRITICAL: GitHub username or repository name is still a placeholder. Please update 'config.github' in the script.");
+            alert("Configuration Error: Please update your GitHub username and repository name in the script to load data.");
+            hideLoadingSpinner();
+            return;
+        }
+
+        try {
+            const response = await fetch(`https://api.github.com/repos/${effectiveUser}/${effectiveRepo}/contents?ref=${branch}`);
+            if (!response.ok) {
+                throw new Error(`GitHub API HTTP error! status: ${response.status} - ${response.statusText} (User: ${effectiveUser}, Repo: ${effectiveRepo})`);
+            }
+            const files = await response.json();
+            const geojsonFiles = files.filter(f => f.type === 'file' && /\.(geojson|json)$/i.test(f.name));
+
+            if (geojsonFiles.length === 0) {
+                console.warn("No GeoJSON files found in the repository.");
+                hideLoadingSpinner();
+                return;
+            }
+
+            for (const file of geojsonFiles) {
+                const dataResponse = await fetch(`https://raw.githubusercontent.com/${effectiveUser}/${effectiveRepo}/${branch}/${file.name}`);
+                if (!dataResponse.ok) {
+                    console.warn(`Failed to load data from ${file.name}: ${dataResponse.status} ${dataResponse.statusText}`);
+                    continue;
+                }
+                const data = await dataResponse.json();
+                const features = data.features && Array.isArray(data.features) ? data.features : Array.isArray(data) ? data : [];
+
+                features.forEach(feature => {
+                    const geometryType = feature.geometry && feature.geometry.type;
+                    const properties = feature.properties || {};
+
+                    if (geometryType && /LineString|MultiLineString/.test(geometryType)) {
+                        if (properties.diameter !== undefined && properties.diameter !== null) {
+                            existingLayer.addData(feature);
+                        } else {
+                            newLayer.addData(feature);
+                        }
+                    } else if (geometryType === 'Point') {
+                        const name = (properties.name || '').toUpperCase();
+                        if (name.includes('WS')) wsLayer.addData(feature);
+                        else if (name.includes('WTP')) wtpLayer.addData(feature);
+                    } else if (geometryType && /Polygon|MultiPolygon/.test(geometryType)) {
+                        countryBoundaryLayer.addData(feature);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error("Error loading GeoJSON data:", error);
+            alert(`Failed to load map data. Please check your internet connection or GitHub configuration. Error: ${error.message}`);
+        } finally {
+            hideLoadingSpinner();
+        }
+    }
 
     function setupSearchControl() {
         allPointFeatures = L.featureGroup([wsLayer, wtpLayer]);
-        const searchCtrl = new L.Control.Search({layer:allPointFeatures,propertyName:'name',collapsed:false,textPlaceholder:'ស្វែងរក...',marker:false,inputClasses:'search-input',buttonClasses:'search-button',
-            moveToLocation:(ll,t,ol)=>{map.setView(ll,14);if(ol&&ol.getPopup&&typeof ol.isPopupOpen==='function'&&!ol.isPopupOpen())ol.openPopup();},initial:false});
-        map.addControl(searchCtrl);
+        const searchControl = new L.Control.Search({
+            layer: allPointFeatures,
+            propertyName: 'name',
+            collapsed: false,
+            textPlaceholder: 'ស្វែងរក...',
+            marker: false,
+            inputClasses: 'search-input',
+            buttonClasses: 'search-button',
+            moveToLocation: (latlng, title, originalLayer) => {
+                map.setView(latlng, 14);
+                if (originalLayer && originalLayer.getPopup && typeof originalLayer.isPopupOpen === 'function' && !originalLayer.isPopupOpen()) {
+                    originalLayer.openPopup();
+                }
+            },
+            initial: false
+        });
+        map.addControl(searchControl);
     }
 
     function createLegend() {
-        const legend = L.control({position:'bottomright'});
-        legend.onAdd = ()=>{const d=L.DomUtil.create('div','legend');d.innerHTML=`
-            <div class="legend-title">កំណត់សម្គាល់</div>
-            <div class="legend-item"><i style="background:${config.layerStyles.existingPipe.color}; border:1px solid #333;"></i> បណ្តាញទុយោបច្ចុប្បន្ន</div>
-            <div class="legend-item"><i style="background:${config.layerStyles.newPipe.color}; border:1px solid black;"></i> បណ្តាញទុយោពង្រីក</div>
-            <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterSource.fillColor}; border-color:${config.layerStyles.waterSource.color};"></i> ទីតាំងប្រភពទឹក</div>
-            <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterTreatmentPlant.fillColor}; border-color:${config.layerStyles.waterTreatmentPlant.color};"></i> ទីតាំងស្ថានីយទឹកស្អាត</div>
-            <div class="legend-item"><i style="background:transparent; border:1px solid ${config.layerStyles.countryBoundary.color};"></i> ព្រំដែនប្រទេស</div>`;
-        return d;};
+        const legend = L.control({ position: 'bottomright' });
+        legend.onAdd = () => {
+            const div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = `
+                <div class="legend-title">កំណត់សម្គាល់</div>
+                <div class="legend-item"><i style="background:${config.layerStyles.existingPipe.color}; border:1px solid #333;"></i> បណ្តាញទុយោបច្ចុប្បន្ន</div>
+                <div class="legend-item"><i style="background:${config.layerStyles.newPipe.color}; border:1px solid black;"></i> បណ្តាញទុយោពង្រីក</div>
+                <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterSource.fillColor}; border-color:${config.layerStyles.waterSource.color};"></i> ទីតាំងប្រភពទឹក</div>
+                <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterTreatmentPlant.fillColor}; border-color:${config.layerStyles.waterTreatmentPlant.color};"></i> ទីតាំងស្ថានីយទឹកស្អាត</div>
+                <div class="legend-item"><i style="background:transparent; border:1px solid ${config.layerStyles.countryBoundary.color};"></i> ព្រំដែនប្រទេស</div>
+            `;
+            return div;
+        };
         legend.addTo(map);
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
         initializeMap();
-        
-        addMapControls(); // Adds general controls (zoom, locate, compass)
-
-        // Add controls to 'bottomleft' in specific order for visual stacking
-        // Top-most in bottom-left:
-        addScaleDenominatorControl(); 
-        // Middle in bottom-left:
-        addPrimaryScaleControl();     
-        // Bottom-most in bottom-left (where the red arrow pointed for coordinates):
-        addMousePositionControl();    
+        // Order of adding controls to 'bottomleft' matters for stacking:
+        addMapControls();             // Adds L.control.scale (primary scale bar)
+        addMousePositionControl();    // Adds mouse coordinate display
+        addScaleDenominatorControl(); // Adds scale denominator (e.g., 1:50000)
         
         setupSidebar();
         createGeoJSONLayers();
