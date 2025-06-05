@@ -139,6 +139,19 @@
         display: none !important; /* Hide the default Leaflet layers toggle */
     }
 
+    /* Style for Mouse Position Control */
+    .leaflet-control-mouseposition {
+        background-color: rgba(255, 255, 255, 0.75);
+        padding: 3px 6px;
+        font-size: 12px;
+        border: 1px solid #bbb;
+        border-radius: 4px;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+        color: #333;
+        margin-top: 4px; /* To match scale denominator if they stack */
+    }
+
+
     /* Responsive adjustments for smaller screens (e.g., mobile) */
     @media (max-width: 768px) {
         #header { font-size: 18px; padding: 10px; }
@@ -180,6 +193,10 @@
         }
 
         .leaflet-bottom.leaflet-left { margin-left: 10px !important; margin-bottom: 10px !important; }
+
+        .leaflet-control-mouseposition {
+            font-size: 11px; /* Slightly smaller on mobile */
+        }
     }
     /* Minor style adjustment for compass if needed */
     .leaflet-control-compass .compass-icon {
@@ -345,6 +362,49 @@
             console.warn("Leaflet Compass plugin not loaded.");
         }
     }
+
+    function addMousePositionControl() {
+        const MousePosition = L.Control.extend({
+            options: {
+                position: 'bottomleft',
+                prefix: "កូអរដោនេ៖ " // Coordinates: in Khmer
+            },
+
+            onAdd: function (map) {
+                this._container = L.DomUtil.create('div', 'leaflet-control-mouseposition');
+                L.DomEvent.disableClickPropagation(this._container);
+                L.DomEvent.disableScrollPropagation(this._container);
+
+                map.on('mousemove', this._onMouseMove, this);
+                map.on('mouseout', this._onMouseOut, this); // Clear when mouse leaves map
+
+                this._container.innerHTML = this.options.prefix + 'N/A';
+                return this._container;
+            },
+
+            onRemove: function (map) {
+                map.off('mousemove', this._onMouseMove, this);
+                map.off('mouseout', this._onMouseOut, this);
+            },
+
+            _onMouseMove: function (e) {
+                const lat = e.latlng.lat.toFixed(5);
+                const lng = e.latlng.lng.toFixed(5);
+                this._container.innerHTML = `${this.options.prefix}${lat}, ${lng}`;
+            },
+
+            _onMouseOut: function (e) {
+                this._container.innerHTML = this.options.prefix + 'N/A';
+            }
+        });
+
+        L.control.mousePosition = function(opts) {
+            return new MousePosition(opts);
+        }
+
+        L.control.mousePosition().addTo(map);
+    }
+
 
     function setupSidebar() {
         sidebar = L.control.sidebar({ container: 'sidebar', autopan: true }).addTo(map);
@@ -603,6 +663,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
         initializeMap();
         addMapControls();
+        addMousePositionControl(); // Add the mouse position control
         setupSidebar();
         createGeoJSONLayers();
         populateLayerList();
