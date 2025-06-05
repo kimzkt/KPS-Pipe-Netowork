@@ -5,13 +5,12 @@
   <title>ផែនទីការផ្គត់ផ្គង់ទឹកស្អាតនៅកម្ពុជា ២០២៥–២០២៤០</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link rel="preconnect" href="https://unpkg.com">
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-sidebar-v2/css/leaflet-sidebar.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-search/dist/leaflet-search.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
   <style>
     body { margin:0; padding:0; font-family:"Khmer OS","Noto Sans Khmer",sans-serif; }
     #header { background:#005cbf; color:#fff; padding:12px; text-align:center; font-size:20px; }
@@ -65,6 +64,61 @@
     }
     .leaflet-control-search .search-button:hover {
         color: #000;
+    }
+
+    /* Dynamic Compass Styles */
+    .leaflet-control-compass {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 50%;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        cursor: pointer;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        border: 2px solid #ccc;
+    }
+
+    .leaflet-control-compass:hover {
+        background: rgba(255, 255, 255, 1);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        transform: scale(1.05);
+    }
+
+    .compass-arrow {
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 20px solid #d32f2f;
+        position: relative;
+        transition: transform 0.3s ease;
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+    }
+
+    .compass-arrow::after {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: -6px;
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 15px solid #666;
+    }
+
+    .compass-n {
+        position: absolute;
+        top: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 12px;
+        font-weight: bold;
+        color: #d32f2f;
+        text-shadow: 0 1px 2px rgba(255,255,255,0.8);
     }
 
     .legend { position:absolute; bottom:20px; right:10px; background:#fff; padding:8px; font-size:14px; border-radius:4px; box-shadow:0 0 6px rgba(0,0,0,0.3); width:260px; }
@@ -162,15 +216,31 @@
 
         /* Adjust positions of other controls if they conflict */
         .leaflet-control-zoom { top: 60px !important; right: 10px !important; }
-        /* Adjusted for locate control */
-        .leaflet-top.leaflet-right { top: 60px !important; right: 10px !important; }
+        .leaflet-top.leaflet-right { top: 60px !important; right: 10px !important; } /* For locate control */
         .leaflet-bottom.leaflet-left { margin-left: 10px !important; margin-bottom: 10px !important; } /* For scale control, ensure it's not hidden by sidebar */
+        
+        /* Compass adjustments for mobile */
+        .leaflet-control-compass {
+            width: 50px;
+            height: 50px;
+        }
+        .compass-arrow {
+            border-left-width: 6px;
+            border-right-width: 6px;
+            border-bottom-width: 16px;
+        }
+        .compass-arrow::after {
+            left: -4px;
+            border-left-width: 4px;
+            border-right-width: 4px;
+            border-top-width: 12px;
+        }
     }
 
   </style>
 </head>
 <body>
-  <div id="header">ផែនទីការផ្គត់ផ្គង់ទឹកស្អាតនៅកម្ពុជា ២០២៥–២០៤០</div>
+  <div id="header">ផែនទីការផ្គត់ផ្គង់ទឹកស្អាតនៅកម្ពុជា ២០២៥–២០២៤០</div>
   <div id="sidebar" class="leaflet-sidebar collapsed">
     <div class="leaflet-sidebar-tabs">
       <ul role="tablist">
@@ -213,7 +283,7 @@
             branch: 'main'
         },
         layerStyles: {
-            existingPipe: { color: 'black', weight: 2 }, // Changed to 'black'
+            existingPipe: { color: '#444', weight: 2 },
             newPipe: { color: 'white', weight: 2 },
             waterSource: { radius: 6, fillColor: '#3498db', color: '#2980b9', fillOpacity: 0.8, weight: 1 },
             waterTreatmentPlant: { radius: 6, fillColor: '#f1c40f', color: '#d4ac0d', fillOpacity: 0.8, weight: 1 },
@@ -235,6 +305,7 @@
     let existingLayer, newLayer, wsLayer, wtpLayer, countryBoundaryLayer;
     let allPointFeatures;
     let currentBaseLayer; // To keep track of the active base layer
+    let compassControl; // To keep track of the compass control
 
     const baseLayersConfig = {
         'Street': {
@@ -250,6 +321,10 @@
                 maxZoom: 19
             })
         }
+        // Add more base maps here if needed, e.g., 'Terrain', 'Light', 'Dark'
+        // 'Terrain': { layer: L.tileLayer('YOUR_TERRAIN_TILE_URL', { attribution: 'YOUR_ATTRIBUTION' }) },
+        // 'Light': { layer: L.tileLayer('YOUR_LIGHT_TILE_URL', { attribution: 'YOUR_ATTRIBUTION' }) },
+        // 'Dark': { layer: L.tileLayer('YOUR_DARK_TILE_URL', { attribution: 'YOUR_ATTRIBUTION' }) }
     };
 
     /**
@@ -265,6 +340,91 @@
     function hideLoadingSpinner() {
         document.getElementById('loading-spinner').style.display = 'none';
     }
+
+    /**
+     * Dynamic Compass Control for Leaflet
+     */
+    L.Control.Compass = L.Control.extend({
+        options: {
+            position: 'topright'
+        },
+
+        onAdd: function(map) {
+            const container = L.DomUtil.create('div', 'leaflet-control-compass');
+            container.title = 'Click to reset north orientation';
+            
+            // Create compass elements
+            const compassN = L.DomUtil.create('div', 'compass-n', container);
+            compassN.innerHTML = 'N';
+            
+            const arrow = L.DomUtil.create('div', 'compass-arrow', container);
+            
+            this._container = container;
+            this._arrow = arrow;
+            
+            // Click event to reset bearing
+            L.DomEvent.on(container, 'click', this._resetBearing, this);
+            L.DomEvent.disableClickPropagation(container);
+            
+            // Update compass when map rotates
+            map.on('rotate', this._updateCompass, this);
+            map.on('moveend', this._updateCompass, this);
+            
+            // Initial update
+            this._updateCompass();
+            
+            return container;
+        },
+
+        onRemove: function(map) {
+            map.off('rotate', this._updateCompass, this);
+            map.off('moveend', this._updateCompass, this);
+        },
+
+        _updateCompass: function() {
+            const map = this._map;
+            let bearing = 0;
+            
+            // Check if map has rotation capability (like with leaflet-rotate plugin)
+            if (map.getBearing && typeof map.getBearing === 'function') {
+                bearing = map.getBearing();
+            } else if (map.options && map.options.rotate) {
+                bearing = map.options.rotate;
+            }
+            
+            // Rotate the arrow to show north direction
+            this._arrow.style.transform = `rotate(${-bearing}deg)`;
+            
+            // Update container opacity based on rotation
+            if (Math.abs(bearing) < 1) {
+                this._container.style.opacity = '0.7';
+            } else {
+                this._container.style.opacity = '1';
+            }
+        },
+
+        _resetBearing: function() {
+            const map = this._map;
+            
+            // Reset bearing if map supports rotation
+            if (map.setBearing && typeof map.setBearing === 'function') {
+                map.setBearing(0);
+            } else if (map.setRotation && typeof map.setRotation === 'function') {
+                map.setRotation(0);
+            }
+            
+            // Visual feedback
+            this._container.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                this._container.style.transform = 'scale(1)';
+            }, 150);
+        }
+    });
+
+    // Factory function for the compass control
+    L.control.compass = function(options) {
+        return new L.Control.Compass(options);
+    };
 
     /**
      * Initializes the Leaflet map and base layers.
@@ -293,6 +453,9 @@
     function addMapControls() {
         L.control.zoom({ position: 'topright' }).addTo(map);
 
+        // Add the dynamic compass control
+        compassControl = L.control.compass({ position: 'topright' }).addTo(map);
+
         // Standard Leaflet Scale Control
         L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
 
@@ -315,7 +478,6 @@
         });
         L.control.scaleDenominator = (opts) => new ScaleDen(opts);
         L.control.scaleDenominator({ position: 'bottomleft' }).addTo(map);
-
 
         L.control.locate({
             position: 'topright',
@@ -528,131 +690,4 @@
                     effectiveRepo = urlPathParts[1];
                 }
             } catch (e) {
-                console.warn("Could not infer GitHub user/repo from URL, using placeholders if not replaced.", e);
-            }
-        }
-
-        if (effectiveUser === 'YOUR_GITHUB_USERNAME' || effectiveRepo === 'YOUR_GITHUB_REPO_NAME') {
-            console.error("GitHub username or repository name is still a placeholder. Please update 'config.github' in the script.");
-            alert("Configuration Error: Please update your GitHub username and repository name in the script to load data.");
-            hideLoadingSpinner();
-            return;
-        }
-
-        try {
-            const response = await fetch(`https://api.github.com/repos/${effectiveUser}/${effectiveRepo}/contents?ref=${branch}`);
-            if (!response.ok) {
-                throw new Error(`GitHub API HTTP error! status: ${response.status} - ${response.statusText}`);
-            }
-            const files = await response.json();
-
-            const geojsonFiles = files.filter(f => f.type === 'file' && /\.(geojson|json)$/i.test(f.name));
-
-            if (geojsonFiles.length === 0) {
-                console.warn("No GeoJSON files found in the repository.");
-                hideLoadingSpinner();
-                return;
-            }
-
-            for (const file of geojsonFiles) {
-                const dataResponse = await fetch(`https://raw.githubusercontent.com/${effectiveUser}/${effectiveRepo}/${branch}/${file.name}`);
-                if (!dataResponse.ok) {
-                    console.warn(`Failed to load data from ${file.name}: ${dataResponse.status} ${dataResponse.statusText}`);
-                    continue;
-                }
-                const data = await dataResponse.json();
-
-                const features = data.features && Array.isArray(data.features) ? data.features : Array.isArray(data) ? data : [];
-
-                features.forEach(feature => {
-                    const geometryType = feature.geometry && feature.geometry.type;
-                    const properties = feature.properties || {};
-
-                    if (geometryType && /Line/.test(geometryType)) {
-                        if (properties.diameter) {
-                            existingLayer.addData(feature);
-                        } else {
-                            newLayer.addData(feature);
-                        }
-                    } else if (geometryType === 'Point') {
-                        const name = properties.name || '';
-                        if (name.includes('WS')) {
-                            wsLayer.addData(feature);
-                        } else if (name.includes('WTP')) {
-                            wtpLayer.addData(feature);
-                        }
-                    } else if (geometryType && /Polygon/.test(geometryType)) {
-                        countryBoundaryLayer.addData(feature);
-                    }
-                });
-            }
-        } catch (error) {
-            console.error("Error loading GeoJSON data:", error);
-            alert(`Failed to load map data. Please check your internet connection or GitHub configuration. Error: ${error.message}`);
-        } finally {
-            hideLoadingSpinner();
-        }
-    }
-
-    /**
-     * Sets up the search control for point features.
-     */
-    function setupSearchControl() {
-        allPointFeatures = L.featureGroup([wsLayer, wtpLayer]);
-
-        // Search control added directly to the map (top-left)
-        const searchControl = new L.Control.Search({
-            layer: allPointFeatures,
-            propertyName: 'name',
-            collapsed: false, // Keep it expanded by default
-            textPlaceholder: 'ស្វែងរក...',
-            marker: false,
-            inputClasses: 'search-input',
-            buttonClasses: 'search-button',
-            moveToLocation: (latlng, originalLayer) => {
-                map.setView(latlng, 14);
-                if (originalLayer && originalLayer.getPopup()) {
-                    originalLayer.openPopup();
-                }
-            },
-            initial: false
-        });
-
-        map.addControl(searchControl);
-    }
-
-    /**
-     * Creates and adds the legend to the map.
-     */
-    function createLegend() {
-        const legend = L.control({ position: 'bottomright' });
-
-        legend.onAdd = () => {
-            const div = L.DomUtil.create('div', 'legend');
-            div.innerHTML = `
-                <div class="legend-title">កំណត់សម្គាល់</div>
-                <div class="legend-item"><i style="background:${config.layerStyles.existingPipe.color}; border:1px solid black;"></i> បណ្តាញទុយោបច្ចុប្បន្ន</div>
-                <div class="legend-item"><i style="background:${config.layerStyles.newPipe.color}; border:1px solid black;"></i> បណ្តាញទុយោពង្រីក</div>
-                <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterSource.fillColor}; border-color:${config.layerStyles.waterSource.color};"></i> ទីតាំងប្រភពទឹក</div>
-                <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterTreatmentPlant.fillColor}; border-color:${config.layerStyles.waterTreatmentPlant.color};"></i> ទីតាំងស្ថានីយទឹកស្អាត</div>
-                <div class="legend-item"><i style="background:transparent; border:1px solid ${config.layerStyles.countryBoundary.color};"></i> ព្រំដែនប្រទេស</div>
-            `;
-            return div;
-        };
-        legend.addTo(map);
-    }
-
-    // Main execution flow
-    document.addEventListener('DOMContentLoaded', async () => {
-        initializeMap();
-        addMapControls();
-        setupSidebar();
-        createGeoJSONLayers();
-        populateLayerList();
-        await loadGeojsonData();
-        setupSearchControl();
-        createLegend();
-    });
-  </script>
-</body>
-</html>
+                console.warn("Could not infer GitHub user/
