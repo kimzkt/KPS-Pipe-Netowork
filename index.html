@@ -69,7 +69,7 @@
         color: #000;
     }
 
-    .legend { position:absolute; bottom:20px; right:10px; background:#fff; padding:8px; font-size:14px; border-radius:4px; box-shadow:0 0 6px rgba(0,0,0,0.3); width:260px; z-index: 990; } /* Added z-index */
+    .legend { position:absolute; bottom:20px; right:10px; background:#fff; padding:8px; font-size:14px; border-radius:4px; box-shadow:0 0 6px rgba(0,0,0,0.3); width:260px; z-index: 990; }
     .legend-title { font-weight: bold; text-align: center; margin-bottom: 8px; font-size: 16px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px; }
     .legend-item { display:flex; align-items:center; margin-bottom:6px; white-space:nowrap; }
     .legend-item:last-child { margin-bottom:0; }
@@ -83,7 +83,7 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        z-index: 1001; /* Ensure spinner is above other elements like legend */
+        z-index: 1001;
         display: none; /* Hidden by default */
         background: rgba(255, 255, 255, 0.8);
         padding: 20px;
@@ -120,12 +120,20 @@
     }
     .leaflet-popup-content table th {
         font-weight: bold;
-        white-space: nowrap;
+        white-space: nowrap; /* Prevent table headers from wrapping */
+        padding-right: 10px; /* Add some space between header and value */
     }
     .leaflet-popup-content table tr:last-child th,
     .leaflet-popup-content table tr:last-child td {
         border-bottom: none;
     }
+    .leaflet-popup-content hr {
+        border: 0;
+        height: 1px;
+        background: #eee;
+        margin: 5px 0;
+    }
+
 
     .leaflet-control-layers-toggle {
         display: none !important; /* Hide the default Leaflet layers toggle */
@@ -160,17 +168,11 @@
             font-size: 13px;
         }
 
-        /* Adjust control positions on mobile.
-           The leaflet-top .leaflet-right group holds zoom, locate, compass.
-           Making its top more generous to accommodate all. */
-        .leaflet-control-zoom {
-             /* Specific top adjustment for zoom might not be needed if .leaflet-top.leaflet-right is adjusted */
-        }
         .leaflet-top.leaflet-right {
-            top: 60px !important; /* Increased to give space for multiple controls */
+            top: 60px !important;
             right: 10px !important;
         }
-        .leaflet-top.leaflet-right .leaflet-control { /* Add some margin between controls in this group */
+        .leaflet-top.leaflet-right .leaflet-control {
             margin-bottom: 5px;
         }
         .leaflet-top.leaflet-right .leaflet-control:last-child {
@@ -181,11 +183,9 @@
     }
     /* Minor style adjustment for compass if needed */
     .leaflet-control-compass .compass-icon {
-        /* Example: Adjust size if needed, default is usually fine */
         /* width: 32px; height: 32px; */
     }
     .leaflet-control-compass .compass-digit {
-        /* Example: Style the digit display */
         /* font-size: 10px; */
     }
 
@@ -230,13 +230,13 @@
   <script>
     // Configuration Object
     const config = {
-        mapCenter: [11.4, 104.5], // Adjust this and initialZoom if you want a different default map view
-        initialZoom: 10,         // e.g., [12.5657, 104.9910] and zoom 7 for a wider view of Cambodia
+        mapCenter: [11.4, 104.5],
+        initialZoom: 10,
         github: {
             // !!! IMPORTANT: REPLACE THESE WITH YOUR ACTUAL GITHUB DETAILS !!!
-            username: 'YOUR_GITHUB_USERNAME', // <--- REPLACE THIS WITH YOUR GITHUB USERNAME
-            repo: 'YOUR_GITHUB_REPO_NAME',    // <--- REPLACE THIS WITH YOUR GITHUB REPOSITORY NAME
-            branch: 'main' // Or your default branch if not 'main'
+            username: 'YOUR_GITHUB_USERNAME',
+            repo: 'YOUR_GITHUB_REPO_NAME',
+            branch: 'main'
         },
         layerStyles: {
             existingPipe: { color: '#444', weight: 2 },
@@ -333,15 +333,13 @@
             circleStyle: { color: '#1a73e8', fillColor: '#1a73e8', fillOpacity: 0.1, weight: 1 }
         }).addTo(map);
 
-        // Add Compass control
-        if (L.control.compass) { // Check if plugin loaded successfully
+        if (L.control.compass) {
             L.control.compass({
-                position: 'topright', // Will stack below zoom and locate
-                autoActive: true,     // Attempt to use device orientation
-                showDigit: false,     // Optionally, set to true to show heading degrees
-                textErr: 'Compass N/A', // Shorter error message for when compass isn't available
-                title: 'ទិសដៅ (Compass)' // Tooltip for the compass
-                // Other options from the plugin's documentation can be set here
+                position: 'topright',
+                autoActive: true,
+                showDigit: false,
+                textErr: 'Compass N/A',
+                title: 'ទិសដៅ (Compass)'
             }).addTo(map);
         } else {
             console.warn("Leaflet Compass plugin not loaded.");
@@ -361,23 +359,49 @@
             interactive: false,
         });
 
+        const createPipePopup = (feature) => {
+            const props = feature.properties || {};
+            let html = `<b>Pipe Details</b><hr>`; // Removed <br> as <hr> provides separation
+            html += '<table>';
+
+            if (props.pipe_code) {
+                html += `<tr><th>Pipe Code</th><td>${props.pipe_code}</td></tr>`;
+            }
+            if (props.diameter !== undefined && props.diameter !== null) { // Check for existence
+                html += `<tr><th>Diameter</th><td>${props.diameter} mm</td></tr>`;
+            }
+            if (props.length !== undefined && props.length !== null) { // Check for existence
+                html += `<tr><th>Length</th><td>${parseFloat(props.length).toFixed(2)} m</td></tr>`;
+            }
+            if (props.material) {
+                html += `<tr><th>Material</th><td>${props.material}</td></tr>`;
+            }
+            if (props.status) {
+                html += `<tr><th>Status</th><td>${props.status}</td></tr>`;
+            }
+            if (props.installation_year) {
+                html += `<tr><th>Installed</th><td>${props.installation_year}</td></tr>`;
+            }
+            // Add any other properties you want to display
+            // Example:
+            // if (props.pressure_rating) {
+            //     html += `<tr><th>Pressure Rating</th><td>${props.pressure_rating} bar</td></tr>`;
+            // }
+            html += '</table>';
+            return html;
+        };
+
         existingLayer = L.geoJSON(null, {
             style: config.layerStyles.existingPipe,
             onEachFeature: (feature, layer) => {
-                const pipeCode = feature.properties.pipe_code || 'N/A';
-                const diameter = feature.properties.diameter ? ` (${feature.properties.diameter}mm)` : '';
-                const material = feature.properties.material ? `<br>Material: ${feature.properties.material}` : '';
-                layer.bindPopup(`<b>Pipe Code:</b> ${pipeCode}${diameter}${material}`);
+                layer.bindPopup(createPipePopup(feature));
             }
         });
 
         newLayer = L.geoJSON(null, {
             style: config.layerStyles.newPipe,
             onEachFeature: (feature, layer) => {
-                const pipeCode = feature.properties.pipe_code || 'N/A';
-                const diameter = feature.properties.diameter ? ` (${feature.properties.diameter}mm)` : '';
-                const material = feature.properties.material ? `<br>Material: ${feature.properties.material}` : '';
-                layer.bindPopup(`<b>Pipe Code:</b> ${pipeCode}${diameter}${material}`);
+                layer.bindPopup(createPipePopup(feature));
             }
         });
 
@@ -385,7 +409,7 @@
             pointToLayer: (feature, latlng) => L.circleMarker(latlng, config.layerStyles.waterSource),
             onEachFeature: (feature, layer) => {
                 const properties = feature.properties || {};
-                let html = `<b>${properties.name || 'Unnamed Water Source'}</b><br><table>`;
+                let html = `<b>${properties.name || 'Unnamed Water Source'}</b><hr><table>`;
                 for (const key in properties) {
                     if (properties.hasOwnProperty(key) && typeof properties[key] !== 'object' && key !== 'name') {
                         html += `<tr><th>${key}</th><td>${properties[key]}</td></tr>`;
@@ -400,7 +424,7 @@
             pointToLayer: (feature, latlng) => L.circleMarker(latlng, config.layerStyles.waterTreatmentPlant),
             onEachFeature: (feature, layer) => {
                 const properties = feature.properties || {};
-                let html = `<b>${properties.name || 'Unnamed Water Treatment Plant'}</b><br><table>`;
+                let html = `<b>${properties.name || 'Unnamed Water Treatment Plant'}</b><hr><table>`;
                 for (const key in properties) {
                      if (properties.hasOwnProperty(key) && typeof properties[key] !== 'object' && key !== 'name') {
                         html += `<tr><th>${key}</th><td>${properties[key]}</td></tr>`;
@@ -520,8 +544,14 @@
                     const properties = feature.properties || {};
 
                     if (geometryType && /LineString|MultiLineString/.test(geometryType)) {
-                        if (properties.diameter) existingLayer.addData(feature);
-                        else newLayer.addData(feature);
+                        // Heuristic for pipe classification:
+                        // If it has a diameter, assume existing, otherwise new.
+                        // For more robust classification, add an explicit 'type' or 'status' property to your GeoJSON.
+                        if (properties.diameter !== undefined && properties.diameter !== null) { // Check specifically for diameter
+                            existingLayer.addData(feature);
+                        } else {
+                            newLayer.addData(feature);
+                        }
                     } else if (geometryType === 'Point') {
                         const name = (properties.name || '').toUpperCase();
                         if (name.includes('WS')) wsLayer.addData(feature);
@@ -581,7 +611,7 @@
         initializeMap();
         addMapControls();
         setupSidebar();
-        createGeoJSONLayers();
+        createGeoJSONLayers(); // Pipe popups are defined here
         populateLayerList();
         await loadGeojsonData();
         setupSearchControl();
