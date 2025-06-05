@@ -239,7 +239,7 @@
             branch: 'main'
         },
         layerStyles: {
-            existingPipe: { color: '#444', weight: 2 },
+            existingPipe: { color: '#000000', weight: 2 }, // MODIFIED: Color set to black
             newPipe: { color: 'white', weight: 2 },
             waterSource: { radius: 6, fillColor: '#3498db', color: '#2980b9', fillOpacity: 0.8, weight: 1 },
             waterTreatmentPlant: { radius: 6, fillColor: '#f1c40f', color: '#d4ac0d', fillOpacity: 0.8, weight: 1 },
@@ -361,16 +361,16 @@
 
         const createPipePopup = (feature) => {
             const props = feature.properties || {};
-            let html = `<b>Pipe Details</b><hr>`; // Removed <br> as <hr> provides separation
+            let html = `<b>Pipe Details</b><hr>`;
             html += '<table>';
 
             if (props.pipe_code) {
                 html += `<tr><th>Pipe Code</th><td>${props.pipe_code}</td></tr>`;
             }
-            if (props.diameter !== undefined && props.diameter !== null) { // Check for existence
+            if (props.diameter !== undefined && props.diameter !== null) {
                 html += `<tr><th>Diameter</th><td>${props.diameter} mm</td></tr>`;
             }
-            if (props.length !== undefined && props.length !== null) { // Check for existence
+            if (props.length !== undefined && props.length !== null) {
                 html += `<tr><th>Length</th><td>${parseFloat(props.length).toFixed(2)} m</td></tr>`;
             }
             if (props.material) {
@@ -382,17 +382,12 @@
             if (props.installation_year) {
                 html += `<tr><th>Installed</th><td>${props.installation_year}</td></tr>`;
             }
-            // Add any other properties you want to display
-            // Example:
-            // if (props.pressure_rating) {
-            //     html += `<tr><th>Pressure Rating</th><td>${props.pressure_rating} bar</td></tr>`;
-            // }
             html += '</table>';
             return html;
         };
 
         existingLayer = L.geoJSON(null, {
-            style: config.layerStyles.existingPipe,
+            style: config.layerStyles.existingPipe, // This will now use the black color
             onEachFeature: (feature, layer) => {
                 layer.bindPopup(createPipePopup(feature));
             }
@@ -544,10 +539,7 @@
                     const properties = feature.properties || {};
 
                     if (geometryType && /LineString|MultiLineString/.test(geometryType)) {
-                        // Heuristic for pipe classification:
-                        // If it has a diameter, assume existing, otherwise new.
-                        // For more robust classification, add an explicit 'type' or 'status' property to your GeoJSON.
-                        if (properties.diameter !== undefined && properties.diameter !== null) { // Check specifically for diameter
+                        if (properties.diameter !== undefined && properties.diameter !== null) {
                             existingLayer.addData(feature);
                         } else {
                             newLayer.addData(feature);
@@ -594,9 +586,10 @@
         const legend = L.control({ position: 'bottomright' });
         legend.onAdd = () => {
             const div = L.DomUtil.create('div', 'legend');
+            // Update legend item for existing pipe to reflect black color
             div.innerHTML = `
                 <div class="legend-title">កំណត់សម្គាល់</div>
-                <div class="legend-item"><i style="background:${config.layerStyles.existingPipe.color}; border:1px solid black;"></i> បណ្តាញទុយោបច្ចុប្បន្ន</div>
+                <div class="legend-item"><i style="background:${config.layerStyles.existingPipe.color}; border:1px solid #333;"></i> បណ្តាញទុយោបច្ចុប្បន្ន</div>
                 <div class="legend-item"><i style="background:${config.layerStyles.newPipe.color}; border:1px solid black;"></i> បណ្តាញទុយោពង្រីក</div>
                 <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterSource.fillColor}; border-color:${config.layerStyles.waterSource.color};"></i> ទីតាំងប្រភពទឹក</div>
                 <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterTreatmentPlant.fillColor}; border-color:${config.layerStyles.waterTreatmentPlant.color};"></i> ទីតាំងស្ថានីយទឹកស្អាត</div>
@@ -611,11 +604,11 @@
         initializeMap();
         addMapControls();
         setupSidebar();
-        createGeoJSONLayers(); // Pipe popups are defined here
+        createGeoJSONLayers();
         populateLayerList();
         await loadGeojsonData();
         setupSearchControl();
-        createLegend();
+        createLegend(); // Legend will now reflect the black color for existing pipes
     });
   </script>
 </body>
