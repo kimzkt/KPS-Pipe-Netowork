@@ -75,6 +75,8 @@
     .legend-item:last-child { margin-bottom:0; }
     .legend i { width:18px; height:18px; margin-right:8px; border:1px solid #000; }
     .legend i.circle { border-radius:50%; }
+
+    /* Scale Denominator Style */
     .leaflet-control-scale-denominator { background:#fff; padding:4px 6px; font-size:12px; border:1px solid rgba(0,0,0,0.2); border-radius:4px; margin-top:4px; }
 
     /* Loading Spinner Styles */
@@ -148,7 +150,7 @@
         border-radius: 4px;
         box-shadow: 0 1px 5px rgba(0,0,0,0.2);
         color: #333;
-        margin-top: 4px; /* To match scale denominator if they stack */
+        margin-top: 4px; /* Consistent margin with other bottom-left controls */
     }
 
 
@@ -195,6 +197,9 @@
         .leaflet-bottom.leaflet-left { margin-left: 10px !important; margin-bottom: 10px !important; }
 
         .leaflet-control-mouseposition {
+            font-size: 11px; /* Slightly smaller on mobile */
+        }
+        .leaflet-control-scale-denominator {
             font-size: 11px; /* Slightly smaller on mobile */
         }
     }
@@ -256,7 +261,7 @@
             branch: 'main'
         },
         layerStyles: {
-            existingPipe: { color: '#000000', weight: 2 }, // MODIFIED: Color set to black
+            existingPipe: { color: '#000000', weight: 2 },
             newPipe: { color: 'white', weight: 2 },
             waterSource: { radius: 6, fillColor: '#3498db', color: '#2980b9', fillOpacity: 0.8, weight: 1 },
             waterTreatmentPlant: { radius: 6, fillColor: '#f1c40f', color: '#d4ac0d', fillOpacity: 0.8, weight: 1 },
@@ -295,6 +300,27 @@
         }
     };
 
+    // Define ScaleDenominator Control Class and Factory Globally
+    const ScaleDen = L.Control.extend({
+        options: { position: 'bottomleft' }, // Default, can be overridden
+        onAdd: function(mapInstance) {
+            this._div = L.DomUtil.create('div', 'leaflet-control-scale-denominator');
+            mapInstance.on('zoomend moveend', this._updateScaleDenominator, this);
+            this._updateScaleDenominator();
+            return this._div;
+        },
+        _updateScaleDenominator: function() {
+            if (!map) return; // Guard clause if map is not yet initialized
+            const lat = map.getCenter().lat;
+            const z = map.getZoom();
+            const mpp = 156543.0339 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);
+            const scale = mpp * 96 / 0.0254; // 96 DPI, 0.0254 meters per inch
+            this._div.innerHTML = 'មាត្រដ្ឋាន៖ 1:' + Math.round(scale).toLocaleString();
+        }
+    });
+    L.control.scaleDenominator = (opts) => new ScaleDen(opts);
+
+
     function showLoadingSpinner() {
         document.getElementById('loading-spinner').style.display = 'block';
     }
@@ -319,26 +345,9 @@
 
     function addMapControls() {
         L.control.zoom({ position: 'topright' }).addTo(map);
+        // Add primary scale bar to bottomleft
         L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
-
-        const ScaleDen = L.Control.extend({
-            options: { position: 'bottomleft' },
-            onAdd: function(mapInstance) {
-                this._div = L.DomUtil.create('div', 'leaflet-control-scale-denominator');
-                mapInstance.on('zoomend moveend', this._updateScaleDenominator, this);
-                this._updateScaleDenominator();
-                return this._div;
-            },
-            _updateScaleDenominator: function() {
-                const lat = map.getCenter().lat;
-                const z = map.getZoom();
-                const mpp = 156543.0339 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);
-                const scale = mpp * 96 / 0.0254;
-                this._div.innerHTML = 'មាត្រដ្ឋាន៖ 1:' + Math.round(scale).toLocaleString();
-            }
-        });
-        L.control.scaleDenominator = (opts) => new ScaleDen(opts);
-        L.control.scaleDenominator({ position: 'bottomleft' }).addTo(map);
+        // Scale Denominator will be added by addScaleDenominatorControl() later for ordering
 
         L.control.locate({
             position: 'topright',
@@ -369,42 +378,39 @@
                 position: 'bottomleft',
                 prefix: "កូអរដោនេ៖ " // Coordinates: in Khmer
             },
-
             onAdd: function (map) {
                 this._container = L.DomUtil.create('div', 'leaflet-control-mouseposition');
                 L.DomEvent.disableClickPropagation(this._container);
                 L.DomEvent.disableScrollPropagation(this._container);
-
                 map.on('mousemove', this._onMouseMove, this);
-                map.on('mouseout', this._onMouseOut, this); // Clear when mouse leaves map
-
+                map.on('mouseout', this._onMouseOut, this);
                 this._container.innerHTML = this.options.prefix + 'N/A';
                 return this._container;
             },
-
             onRemove: function (map) {
                 map.off('mousemove', this._onMouseMove, this);
                 map.off('mouseout', this._onMouseOut, this);
             },
-
             _onMouseMove: function (e) {
                 const lat = e.latlng.lat.toFixed(5);
                 const lng = e.latlng.lng.toFixed(5);
                 this._container.innerHTML = `${this.options.prefix}${lat}, ${lng}`;
             },
-
             _onMouseOut: function (e) {
                 this._container.innerHTML = this.options.prefix + 'N/A';
             }
         });
-
-        L.control.mousePosition = function(opts) {
-            return new MousePosition(opts);
-        }
-
-        L.control.mousePosition().addTo(map);
+        L.control.mousePosition = function(opts) { return new MousePosition(opts); }
+        L.control.mousePosition().addTo(map); // Adds to bottomleft
     }
 
+    function addScaleDenominatorControl() {
+        if (L.control.scaleDenominator) {
+            L.control.scaleDenominator({ position: 'bottomleft' }).addTo(map); // Adds to bottomleft
+        } else {
+            console.error("L.control.scaleDenominator factory not initialized. Cannot add scale denominator.");
+        }
+    }
 
     function setupSidebar() {
         sidebar = L.control.sidebar({ container: 'sidebar', autopan: true }).addTo(map);
@@ -423,41 +429,24 @@
             const props = feature.properties || {};
             let html = `<b>Pipe Details</b><hr>`;
             html += '<table>';
-
-            if (props.pipe_code) {
-                html += `<tr><th>Pipe Code</th><td>${props.pipe_code}</td></tr>`;
-            }
-            if (props.diameter !== undefined && props.diameter !== null) {
-                html += `<tr><th>Diameter</th><td>${props.diameter} mm</td></tr>`;
-            }
-            if (props.length !== undefined && props.length !== null) {
-                html += `<tr><th>Length</th><td>${parseFloat(props.length).toFixed(2)} m</td></tr>`;
-            }
-            if (props.material) {
-                html += `<tr><th>Material</th><td>${props.material}</td></tr>`;
-            }
-            if (props.status) {
-                html += `<tr><th>Status</th><td>${props.status}</td></tr>`;
-            }
-            if (props.installation_year) {
-                html += `<tr><th>Installed</th><td>${props.installation_year}</td></tr>`;
-            }
+            if (props.pipe_code) html += `<tr><th>Pipe Code</th><td>${props.pipe_code}</td></tr>`;
+            if (props.diameter !== undefined && props.diameter !== null) html += `<tr><th>Diameter</th><td>${props.diameter} mm</td></tr>`;
+            if (props.length !== undefined && props.length !== null) html += `<tr><th>Length</th><td>${parseFloat(props.length).toFixed(2)} m</td></tr>`;
+            if (props.material) html += `<tr><th>Material</th><td>${props.material}</td></tr>`;
+            if (props.status) html += `<tr><th>Status</th><td>${props.status}</td></tr>`;
+            if (props.installation_year) html += `<tr><th>Installed</th><td>${props.installation_year}</td></tr>`;
             html += '</table>';
             return html;
         };
 
         existingLayer = L.geoJSON(null, {
-            style: config.layerStyles.existingPipe, // This will now use the black color
-            onEachFeature: (feature, layer) => {
-                layer.bindPopup(createPipePopup(feature));
-            }
+            style: config.layerStyles.existingPipe,
+            onEachFeature: (feature, layer) => layer.bindPopup(createPipePopup(feature))
         });
 
         newLayer = L.geoJSON(null, {
             style: config.layerStyles.newPipe,
-            onEachFeature: (feature, layer) => {
-                layer.bindPopup(createPipePopup(feature));
-            }
+            onEachFeature: (feature, layer) => layer.bindPopup(createPipePopup(feature))
         });
 
         wsLayer = L.geoJSON(null, {
@@ -646,7 +635,6 @@
         const legend = L.control({ position: 'bottomright' });
         legend.onAdd = () => {
             const div = L.DomUtil.create('div', 'legend');
-            // Update legend item for existing pipe to reflect black color
             div.innerHTML = `
                 <div class="legend-title">កំណត់សម្គាល់</div>
                 <div class="legend-item"><i style="background:${config.layerStyles.existingPipe.color}; border:1px solid #333;"></i> បណ្តាញទុយោបច្ចុប្បន្ន</div>
@@ -662,14 +650,17 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
         initializeMap();
-        addMapControls();
-        addMousePositionControl(); // Add the mouse position control
+        // Order of adding controls to 'bottomleft' matters for stacking:
+        addMapControls();             // Adds L.control.scale (primary scale bar)
+        addMousePositionControl();    // Adds mouse coordinate display
+        addScaleDenominatorControl(); // Adds scale denominator (e.g., 1:50000)
+        
         setupSidebar();
         createGeoJSONLayers();
         populateLayerList();
         await loadGeojsonData();
         setupSearchControl();
-        createLegend(); // Legend will now reflect the black color for existing pipes
+        createLegend();
     });
   </script>
 </body>
