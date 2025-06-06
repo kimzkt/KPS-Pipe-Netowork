@@ -214,13 +214,12 @@
     /* Responsive adjustments for smaller screens (e.g., mobile) */
     @media (max-width: 768px) {
         #header { font-size: 18px; padding: 10px; }
-        #map { top: 44px; } /* Adjusted to match calculated header height of 38px + some buffer or if line-height is > 1 */
+        #map { top: 44px; }
 
         .leaflet-sidebar { width: 80vw !important; }
         .leaflet-sidebar.collapsed { width: 50px !important; }
         .leaflet-sidebar-tabs a { width:50px; height:50px; line-height:50px; }
 
-        /* Search Control: Adjust width to be more flexible */
         .leaflet-control-search {
             left: 10px;
             right: 10px;
@@ -231,7 +230,7 @@
             font-size: 14px;
         }
         .leaflet-control-search .search-tooltip {
-            max-height: 150px; /* Shorter list on mobile */
+            max-height: 150px;
         }
         .leaflet-control-search .search-tip {
             font-size: 13px;
@@ -247,7 +246,7 @@
         }
 
         .leaflet-top.leaflet-right {
-            top: 60px !important; /* Adjusted to make space if search results are tall or for other top-right controls */
+            top: 60px !important;
             right: 10px !important;
         }
         .leaflet-top.leaflet-right .leaflet-control {
@@ -260,19 +259,14 @@
         .leaflet-bottom.leaflet-left { margin-left: 10px !important; margin-bottom: 10px !important; }
 
         .leaflet-control-mouseposition {
-            font-size: 11px; /* Slightly smaller on mobile */
+            font-size: 11px;
         }
         .leaflet-control-scale-denominator {
-            font-size: 11px; /* Slightly smaller on mobile */
+            font-size: 11px;
         }
     }
-    /* Minor style adjustment for compass if needed */
-    .leaflet-control-compass .compass-icon {
-        /* width: 32px; height: 32px; */
-    }
-    .leaflet-control-compass .compass-digit {
-        /* font-size: 10px; */
-    }
+    .leaflet-control-compass .compass-icon {}
+    .leaflet-control-compass .compass-digit {}
 
   </style>
 </head>
@@ -309,38 +303,30 @@
   <script src="https://unpkg.com/leaflet-search/dist/leaflet-search.min.js"></script>
   <script src="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-  <!-- Leaflet Compass JS (after Leaflet) -->
   <script src="https://unpkg.com/leaflet-compass@latest/dist/leaflet-compass.min.js"></script>
 
   <script>
-    // Configuration Object
     const config = {
         mapCenter: [11.4, 104.5],
         initialZoom: 10,
         github: {
-            // !!! CRITICAL: REPLACE THESE WITH YOUR ACTUAL GITHUB DETAILS !!!
             username: 'YOUR_GITHUB_USERNAME', // <<<--- REPLACE
             repo: 'YOUR_GITHUB_REPO_NAME',   // <<<--- REPLACE
             branch: 'main'
         },
         layerStyles: {
-            existingPipe: { color: '#000000', weight: 2 }, // Black for existing
-            newPipe: { color: 'white', weight: 2 },       // White for new/expansion
+            existingPipe: { color: '#000000', weight: 2 },
+            newPipe: { color: 'white', weight: 2 },
             waterSource: { radius: 6, fillColor: '#3498db', color: '#2980b9', fillOpacity: 0.8, weight: 1 },
             waterTreatmentPlant: { radius: 6, fillColor: '#f1c40f', color: '#d4ac0d', fillOpacity: 0.8, weight: 1 },
-            countryBoundary: {
-                color: '#ff0000',
-                weight: 2,
-                fillOpacity: 0
-            }
+            countryBoundary: { color: '#ff0000', weight: 2, fillOpacity: 0 }
         },
         attribution: {
             osm: '© OpenStreetMap contributors',
-            esri: '© Esri, Maxar, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AeroGRID, IGN, and the GIS User Community'
+            esri: '© Esri, ... GIS User Community'
         },
     };
 
-    // Global map variables
     let map;
     let sidebar;
     let existingLayer, newLayer, wsLayer, wtpLayer, countryBoundaryLayer;
@@ -350,53 +336,42 @@
     const baseLayersConfig = {
         'Street': {
             layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: config.attribution.osm,
-                maxZoom: 19
+                attribution: config.attribution.osm, maxZoom: 19
             }),
             default: true
         },
         'Satellite': {
             layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: config.attribution.esri,
-                maxZoom: 19
+                attribution: config.attribution.esri, maxZoom: 19
             })
         }
     };
 
-    // Scale Denominator Control Definition
     const ScaleDen = L.Control.extend({
         options: { position: 'bottomleft' },
-        onAdd: function(mapInstance) { // mapInstance is the map this control is added to
+        onAdd: function(mapInstance) {
             this._div = L.DomUtil.create('div', 'leaflet-control-scale-denominator');
             this._map = mapInstance;
             this._map.on('zoomend moveend', this._updateScaleDenominator, this);
-            this._updateScaleDenominator(); // Initial update
+            this._updateScaleDenominator();
             return this._div;
         },
         onRemove: function() {
-            if (this._map) {
-                this._map.off('zoomend moveend', this._updateScaleDenominator, this);
-            }
+            if (this._map) this._map.off('zoomend moveend', this._updateScaleDenominator, this);
         },
         _updateScaleDenominator: function() {
             if (!this._map) return;
             const lat = this._map.getCenter().lat;
             const z = this._map.getZoom();
             const mpp = 156543.0339 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);
-            const scale = mpp * 96 / 0.0254; // Assuming 96 DPI
+            const scale = mpp * 96 / 0.0254;
             this._div.innerHTML = 'មាត្រដ្ឋាន៖ 1:' + Math.round(scale).toLocaleString();
         }
     });
     L.control.scaleDenominator = (opts) => new ScaleDen(opts);
 
-
-    function showLoadingSpinner() {
-        document.getElementById('loading-spinner').style.display = 'block';
-    }
-
-    function hideLoadingSpinner() {
-        document.getElementById('loading-spinner').style.display = 'none';
-    }
+    function showLoadingSpinner() { document.getElementById('loading-spinner').style.display = 'block'; }
+    function hideLoadingSpinner() { document.getElementById('loading-spinner').style.display = 'none'; }
 
     function initializeMap() {
         map = L.map('map', { zoomControl: false }).setView(config.mapCenter, config.initialZoom);
@@ -407,43 +382,28 @@
             }
         }
         const layersToggle = document.querySelector('.leaflet-control-layers-toggle');
-        if (layersToggle) {
-            layersToggle.style.display = 'none';
-        }
+        if (layersToggle) layersToggle.style.display = 'none';
     }
 
     function addMapControls() {
         L.control.zoom({ position: 'topright' }).addTo(map);
         L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
-
         L.control.locate({
-            position: 'topright',
-            strings: { title: 'ស្វែងរកទីតាំង​របស់ខ្ញុំ' },
-            drawCircle: true,
-            follow: true,
-            setView: 'untilPan',
+            position: 'topright', strings: { title: 'ស្វែងរកទីតាំង​របស់ខ្ញុំ' },
+            drawCircle: true, follow: true, setView: 'untilPan',
             markerStyle: { fillColor: '#1a73e8', color: '#fff', weight: 2, opacity: 1, fillOpacity: 0.8 },
             circleStyle: { color: '#1a73e8', fillColor: '#1a73e8', fillOpacity: 0.1, weight: 1 }
         }).addTo(map);
-
         if (L.control.compass) {
             L.control.compass({
-                position: 'topright',
-                autoActive: true,
-                showDigit: false,
-                textErr: 'Compass N/A',
-                title: 'ទិសដៅ (Compass)'
+                position: 'topright', autoActive: true, showDigit: false,
+                textErr: 'Compass N/A', title: 'ទិសដៅ (Compass)'
             }).addTo(map);
-        } else {
-            console.warn("Leaflet Compass plugin not loaded.");
-        }
+        } else console.warn("Leaflet Compass plugin not loaded.");
     }
 
     const MousePosition = L.Control.extend({
-        options: {
-            position: 'bottomleft',
-            prefix: "កូអរដោនេ៖ "
-        },
+        options: { position: 'bottomleft', prefix: "កូអរដោនេ៖ " },
         onAdd: function (mapInstance) {
             this._map = mapInstance;
             this._container = L.DomUtil.create('div', 'leaflet-control-mouseposition');
@@ -461,47 +421,29 @@
             }
         },
         _onMouseMove: function (e) {
-            const lat = e.latlng.lat.toFixed(5);
-            const lng = e.latlng.lng.toFixed(5);
-            this._container.innerHTML = `${this.options.prefix}${lat}, ${lng}`;
+            this._container.innerHTML = `${this.options.prefix}${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
         },
-        _onMouseOut: function () {
-            this._container.innerHTML = this.options.prefix + 'N/A';
-        }
+        _onMouseOut: function () { this._container.innerHTML = this.options.prefix + 'N/A'; }
     });
     L.control.mousePosition = function(opts) { return new MousePosition(opts); }
 
-    function addMousePositionControl() {
-        if (L.control.mousePosition) {
-            L.control.mousePosition().addTo(map);
-        }
-    }
-
+    function addMousePositionControl() { if (L.control.mousePosition) L.control.mousePosition().addTo(map); }
     function addScaleDenominatorControl() {
-        if (L.control.scaleDenominator) {
-            L.control.scaleDenominator({ position: 'bottomleft' }).addTo(map);
-        } else {
-            console.error("L.control.scaleDenominator factory not initialized correctly.");
-        }
+        if (L.control.scaleDenominator) L.control.scaleDenominator({ position: 'bottomleft' }).addTo(map);
+        else console.error("L.control.scaleDenominator factory not initialized.");
     }
 
     function setupSidebar() {
         sidebar = L.control.sidebar({ container: 'sidebar', autopan: true }).addTo(map);
-        if (window.innerWidth > 768) {
-            sidebar.open('layers');
-        }
+        if (window.innerWidth > 768) sidebar.open('layers');
     }
 
     function createGeoJSONLayers() {
-        countryBoundaryLayer = L.geoJSON(null, {
-            style: config.layerStyles.countryBoundary,
-            interactive: false,
-        });
+        countryBoundaryLayer = L.geoJSON(null, { style: config.layerStyles.countryBoundary, interactive: false });
 
         const createPipePopup = (feature) => {
             const props = feature.properties || {};
-            let html = `<b>Pipe Details</b><hr>`;
-            html += '<table>';
+            let html = `<b>Pipe Details</b><hr><table>`;
             if (props.pipe_code) html += `<tr><th>Pipe Code</th><td>${props.pipe_code}</td></tr>`;
             if (props.diameter !== undefined && props.diameter !== null) html += `<tr><th>Diameter</th><td>${props.diameter} mm</td></tr>`;
             if (props.length !== undefined && props.length !== null) html += `<tr><th>Length</th><td>${parseFloat(props.length).toFixed(2)} m</td></tr>`;
@@ -512,100 +454,60 @@
             return html;
         };
 
-        existingLayer = L.geoJSON(null, {
-            style: config.layerStyles.existingPipe,
-            onEachFeature: (feature, layer) => layer.bindPopup(createPipePopup(feature))
-        });
+        existingLayer = L.geoJSON(null, { style: config.layerStyles.existingPipe, onEachFeature: (f, l) => l.bindPopup(createPipePopup(f)) });
+        newLayer = L.geoJSON(null, { style: config.layerStyles.newPipe, onEachFeature: (f, l) => l.bindPopup(createPipePopup(f)) });
 
-        newLayer = L.geoJSON(null, {
-            style: config.layerStyles.newPipe,
-            onEachFeature: (feature, layer) => layer.bindPopup(createPipePopup(feature))
-        });
-
-        // --- UPDATED createPointPopup function ---
+        // --- MODIFIED createPointPopup function ---
         const createPointPopup = (feature, defaultName) => {
             const properties = feature.properties || {};
             let html = `<b>${properties.name || defaultName}</b><hr>`;
 
-            // Handle Description separately if you want it prominent
-            // Check for both "Description" and "description"
             let descriptionValue = properties.Description || properties.description;
             if (descriptionValue) {
                 html += `<p>${descriptionValue}</p><hr>`;
             }
 
-            html += '<table>';
-
-            // Define the order and formatting for specific fields
-            // IMPORTANT: Adjust 'key' to match your GeoJSON property names (case-sensitive!)
-            const displayFields = [
-                { key: 'Altitude', geojsonKeys: ['Altitude', 'altitude'], label: 'Altitude', format: (val) => val !== null && val !== undefined ? `${parseFloat(val).toFixed(1)} m` : 'N/A' },
-                { key: 'Alt Mode', geojsonKeys: ['Alt Mode', 'alt_mode', 'altMode'], label: 'Altitude Mode' },
-                { key: 'Time Begin', geojsonKeys: ['Time Begin', 'time_begin', 'timeBegin'], label: 'Time Begin', format: (val) => val ? new Date(val).toLocaleString() : 'N/A' },
-                { key: 'Time End', geojsonKeys: ['Time End', 'time_end', 'timeEnd'], label: 'Time End', format: (val) => val ? new Date(val).toLocaleString() : 'N/A' },
-                { key: 'Time When', geojsonKeys: ['Time When', 'time_when', 'timeWhen'], label: 'Time When', format: (val) => val ? new Date(val).toLocaleString() : 'N/A' }
+            // List of keys to EXCLUDE from the popup (case-insensitive for robustness)
+            const excludeKeys = [
+                'name',
+                'description', // Already handled if present
+                'altitude',
+                'alt mode', 'alt_mode', 'altmode',
+                'time begin', 'time_begin', 'timebegin',
+                'time end', 'time_end', 'timeend',
+                'time when', 'time_when', 'timewhen'
             ];
 
-            const addedKeys = ['name', 'description', 'Description']; // Keep track of keys already handled or to be skipped
-
-            displayFields.forEach(fieldInfo => {
-                let value;
-                let actualKey;
-                // Find the value by checking possible GeoJSON keys
-                for (const gjKey of fieldInfo.geojsonKeys) {
-                    if (properties[gjKey] !== undefined) {
-                        value = properties[gjKey];
-                        actualKey = gjKey;
-                        break;
-                    }
-                }
-
-                if (value !== undefined) {
-                    const displayValue = fieldInfo.format ? fieldInfo.format(value) : (value !== null ? value : 'N/A');
-                    html += `<tr><th>${fieldInfo.label}</th><td>${displayValue}</td></tr>`;
-                    if (actualKey) addedKeys.push(actualKey.toLowerCase()); // Add the actual key found to prevent re-listing
-                }
-            });
-
-
-            // Separator for other properties (optional)
-            let otherPropertiesExist = false;
+            let tableContent = '';
             for (const key in properties) {
-                if (properties.hasOwnProperty(key) && !addedKeys.includes(key.toLowerCase()) && typeof properties[key] !== 'object') {
-                    otherPropertiesExist = true;
-                    break;
+                if (properties.hasOwnProperty(key) &&
+                    !excludeKeys.includes(key.toLowerCase()) &&
+                    typeof properties[key] !== 'object') {
+                    
+                    const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    const value = properties[key];
+                    const displayValue = (value !== null && value !== undefined) ? value : 'N/A';
+                    tableContent += `<tr><th>${formattedKey}</th><td>${displayValue}</td></tr>`;
                 }
             }
 
-            if (otherPropertiesExist) {
-                 html += '<tr><td colspan="2" style="padding-top: 5px; border-top: 1px dashed #ccc;"><i style="font-size:0.9em; color:#555;">Other Properties:</i></td></tr>';
-
-                for (const key in properties) {
-                    if (properties.hasOwnProperty(key) &&
-                        !addedKeys.includes(key.toLowerCase()) && // Check against lowercase version of already added keys
-                        typeof properties[key] !== 'object') {
-                        
-                        const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                        html += `<tr><th>${formattedKey}</th><td>${properties[key] !== null ? properties[key] : 'N/A'}</td></tr>`;
-                         addedKeys.push(key.toLowerCase()); // Add to prevent duplicates if keys differ only by case but normalize to same
-                    }
-                }
+            if (tableContent) {
+                html += `<table>${tableContent}</table>`;
+            } else if (!descriptionValue && !(properties.name || defaultName)) {
+                // If popup would be completely empty (no title, no desc, no table props)
+                html = 'No information available.';
+            } else if (!tableContent && html.endsWith('<hr>')) {
+                 // If there's a title and/or description, but no table properties, remove trailing <hr>
+                 html = html.slice(0, -4);
             }
-            html += '</table>';
+
+
             return html;
         };
-        // --- END OF UPDATED createPointPopup function ---
+        // --- END OF MODIFIED createPointPopup function ---
 
-
-        wsLayer = L.geoJSON(null, {
-            pointToLayer: (feature, latlng) => L.circleMarker(latlng, config.layerStyles.waterSource),
-            onEachFeature: (feature, layer) => layer.bindPopup(createPointPopup(feature, 'Unnamed Water Source'))
-        });
-
-        wtpLayer = L.geoJSON(null, {
-            pointToLayer: (feature, latlng) => L.circleMarker(latlng, config.layerStyles.waterTreatmentPlant),
-            onEachFeature: (feature, layer) => layer.bindPopup(createPointPopup(feature, 'Unnamed Water Treatment Plant'))
-        });
+        wsLayer = L.geoJSON(null, { pointToLayer: (f, ll) => L.circleMarker(ll, config.layerStyles.waterSource), onEachFeature: (f, l) => l.bindPopup(createPointPopup(f, 'Unnamed Water Source')) });
+        wtpLayer = L.geoJSON(null, { pointToLayer: (f, ll) => L.circleMarker(ll, config.layerStyles.waterTreatmentPlant), onEachFeature: (f, l) => l.bindPopup(createPointPopup(f, 'Unnamed Water Treatment Plant')) });
 
         countryBoundaryLayer.addTo(map);
         existingLayer.addTo(map);
@@ -616,159 +518,116 @@
 
     function populateLayerList() {
         const overlays = {
-            'បណ្តាញទុយោបច្ចុប្បន្ន': existingLayer,
-            'បណ្តាញទុយោពង្រីក': newLayer,
-            'ទីតាំងប្រភពទឹក': wsLayer,
-            'ទីតាំងស្ថានីយទឹកស្អាត': wtpLayer,
+            'បណ្តាញទុយោបច្ចុប្បន្ន': existingLayer, 'បណ្តាញទុយោពង្រីក': newLayer,
+            'ទីតាំងប្រភពទឹក': wsLayer, 'ទីតាំងស្ថានីយទឹកស្អាត': wtpLayer,
             'ព្រំដែនប្រទេស': countryBoundaryLayer
         };
-
         const layerListDiv = document.getElementById('layer-list');
         layerListDiv.innerHTML = '';
         Object.keys(overlays).forEach(name => {
-            const div = document.createElement('div');
-            div.className = 'layer-checkbox';
-            const input = document.createElement('input');
-            input.type = 'checkbox';
-            input.checked = map.hasLayer(overlays[name]);
+            const div = L.DomUtil.create('div', 'layer-checkbox');
+            const input = L.DomUtil.create('input', '', div);
+            input.type = 'checkbox'; input.checked = map.hasLayer(overlays[name]);
             input.id = `overlay-${name.replace(/\s/g, '-')}`;
             input.onchange = () => { map[input.checked ? 'addLayer' : 'removeLayer'](overlays[name]); };
-            const label = document.createElement('label');
-            label.htmlFor = input.id;
-            label.innerText = name;
-            div.append(input, label);
-            layerListDiv.appendChild(div);
+            const label = L.DomUtil.create('label', '', div);
+            label.htmlFor = input.id; label.innerText = name;
         });
-
         const baseMapListDiv = document.getElementById('base-map-list');
         baseMapListDiv.innerHTML = '';
         Object.keys(baseLayersConfig).forEach(name => {
-            const div = document.createElement('div');
-            div.className = 'base-map-radio';
-            const input = document.createElement('input');
-            input.type = 'radio';
-            input.name = 'base-map';
+            const div = L.DomUtil.create('div', 'base-map-radio');
+            const input = L.DomUtil.create('input', '', div);
+            input.type = 'radio'; input.name = 'base-map';
             input.id = `base-${name.replace(/\s/g, '-')}`;
             input.checked = baseLayersConfig[name].default || false;
             input.onchange = () => {
                 if (map.hasLayer(currentBaseLayer)) map.removeLayer(currentBaseLayer);
                 currentBaseLayer = baseLayersConfig[name].layer.addTo(map);
             };
-            const label = document.createElement('label');
-            label.htmlFor = input.id;
-            label.innerText = name;
-            div.append(input, label);
-            baseMapListDiv.appendChild(div);
+            const label = L.DomUtil.create('label', '', div);
+            label.htmlFor = input.id; label.innerText = name;
         });
     }
 
     async function loadGeojsonData() {
         showLoadingSpinner();
         const { username, repo, branch } = config.github;
-        let effectiveUser = username;
-        let effectiveRepo = repo;
+        let effectiveUser = username, effectiveRepo = repo;
 
         if (username === 'YOUR_GITHUB_USERNAME' || repo === 'YOUR_GITHUB_REPO_NAME') {
             try {
                 const urlPathParts = location.pathname.split('/').filter(Boolean);
                 if (location.host.includes('github.io')) {
                      effectiveUser = location.host.split('.')[0];
-                     effectiveRepo = urlPathParts.length > 0 ? urlPathParts[0] : (effectiveUser + ".github.io");
+                     effectiveRepo = urlPathParts[0] || `${effectiveUser}.github.io`;
                 } else if (location.protocol === 'file:' && urlPathParts.length >= 3) {
                     effectiveUser = urlPathParts[urlPathParts.length - 3];
                     effectiveRepo = urlPathParts[urlPathParts.length - 2];
                 }
-            } catch (e) {
-                console.warn("Could not infer GitHub user/repo from URL.", e);
-            }
+            } catch (e) { console.warn("Could not infer GitHub user/repo.", e); }
         }
 
         if (effectiveUser === 'YOUR_GITHUB_USERNAME' || effectiveRepo === 'YOUR_GITHUB_REPO_NAME') {
-            console.error("CRITICAL: GitHub username or repository name is a placeholder. Update 'config.github'.");
-            alert("Configuration Error: GitHub username/repository not set.");
-            hideLoadingSpinner();
-            return;
+            console.error("CRITICAL: GitHub username/repo placeholder. Update 'config.github'.");
+            alert("Config Error: GitHub user/repo not set."); hideLoadingSpinner(); return;
         }
-        console.info(`Loading data from GitHub: User=${effectiveUser}, Repo=${effectiveRepo}, Branch=${branch}`);
+        console.info(`Loading data from GitHub: ${effectiveUser}/${effectiveRepo}/${branch}`);
 
         try {
-            const response = await fetch(`https://api.github.com/repos/${effectiveUser}/${effectiveRepo}/contents?ref=${branch}`);
-            if (!response.ok) {
-                throw new Error(`GitHub API HTTP error! status: ${response.status} - ${response.statusText}`);
-            }
-            const files = await response.json();
+            const res = await fetch(`https://api.github.com/repos/${effectiveUser}/${effectiveRepo}/contents?ref=${branch}`);
+            if (!res.ok) throw new Error(`GitHub API HTTP error! ${res.status} - ${res.statusText}`);
+            const files = await res.json();
             const geojsonFiles = files.filter(f => f.type === 'file' && /\.(geojson|json)$/i.test(f.name));
 
-            if (geojsonFiles.length === 0) {
-                console.warn(`No GeoJSON files in ${effectiveUser}/${effectiveRepo}/${branch}`);
-                hideLoadingSpinner(); return;
-            }
+            if (!geojsonFiles.length) { console.warn("No GeoJSON files found."); hideLoadingSpinner(); return; }
 
-            let featuresLoadedCount = 0;
+            let featuresLoaded = 0;
             for (const file of geojsonFiles) {
-                const dataResponse = await fetch(file.download_url);
-                if (!dataResponse.ok) {
-                    console.warn(`Failed to load ${file.name}: ${dataResponse.statusText}`);
-                    continue;
-                }
-                const data = await dataResponse.json();
+                const dataRes = await fetch(file.download_url);
+                if (!dataRes.ok) { console.warn(`Failed to load ${file.name}: ${dataRes.statusText}`); continue; }
+                const data = await dataRes.json();
                 const features = data.features && Array.isArray(data.features) ? data.features : Array.isArray(data) ? data : [];
 
-                features.forEach(feature => {
-                    featuresLoadedCount++;
-                    const geometryType = feature.geometry && feature.geometry.type;
-                    const properties = feature.properties || {};
-
-                    if (geometryType && /LineString|MultiLineString/.test(geometryType)) {
-                        if (properties.diameter !== undefined && properties.diameter !== null) {
-                            existingLayer.addData(feature);
-                        } else {
-                            newLayer.addData(feature);
-                        }
-                    } else if (geometryType === 'Point') {
-                        const name = (properties.name || '').toUpperCase();
-                        if (name.includes('WS')) wsLayer.addData(feature);
-                        else if (name.includes('WTP')) wtpLayer.addData(feature);
-                        else console.warn(`Point unclassified:`, feature);
-                    } else if (geometryType && /Polygon|MultiPolygon/.test(geometryType)) {
-                        countryBoundaryLayer.addData(feature);
+                features.forEach(feat => {
+                    featuresLoaded++;
+                    const geomType = feat.geometry && feat.geometry.type;
+                    const props = feat.properties || {};
+                    if (geomType && /LineString|MultiLineString/.test(geomType)) {
+                        (props.diameter !== undefined && props.diameter !== null) ? existingLayer.addData(feat) : newLayer.addData(feat);
+                    } else if (geomType === 'Point') {
+                        const nameUpper = (props.name || '').toUpperCase();
+                        if (nameUpper.includes('WS')) wsLayer.addData(feat);
+                        else if (nameUpper.includes('WTP')) wtpLayer.addData(feat);
+                        else console.warn("Unclassified Point:", feat);
+                    } else if (geomType && /Polygon|MultiPolygon/.test(geomType)) {
+                        countryBoundaryLayer.addData(feat);
                     }
                 });
             }
-            console.log(`Total features processed: ${featuresLoadedCount}`);
-            if(featuresLoadedCount === 0 && geojsonFiles.length > 0) {
-                console.warn("GeoJSON files found, but no features loaded. Check content.");
-            }
-
-        } catch (error) {
-            console.error("Error loading GeoJSON data:", error);
-            alert(`Failed to load map data. Error: ${error.message}`);
-        } finally {
-            hideLoadingSpinner();
-        }
+            console.log(`Total features processed: ${featuresLoaded}`);
+            if(!featuresLoaded && geojsonFiles.length) console.warn("Files found, but no features loaded.");
+        } catch (err) {
+            console.error("Error loading GeoJSON:", err);
+            alert(`Failed to load map data: ${err.message}`);
+        } finally { hideLoadingSpinner(); }
     }
 
     function setupSearchControl() {
-        if (!wsLayer || !wtpLayer) {
-            console.error("Point layers not initialized for search setup.");
-            return;
-        }
+        if (!wsLayer || !wtpLayer) { console.error("Point layers not init for search."); return; }
         allPointFeatures = L.featureGroup([wsLayer, wtpLayer]);
-
-        const searchControl = new L.Control.Search({
+        const searchCtrl = new L.Control.Search({
             layer: allPointFeatures, propertyName: 'name', collapsed: false,
             textPlaceholder: 'ស្វែងរក...', marker: false, zoom: 15,
-            moveToLocation: (latlng, title, originalLayer) => {
-                map.setView(latlng, searchControl.options.zoom || 15);
-                if (originalLayer && originalLayer.getPopup && typeof originalLayer.isPopupOpen === 'function' && !originalLayer.isPopupOpen()) {
-                    originalLayer.openPopup();
-                }
+            moveToLocation: (ll, title, lyr) => {
+                map.setView(ll, searchCtrl.options.zoom || 15);
+                if (lyr && lyr.getPopup && typeof lyr.isPopupOpen === 'function' && !lyr.isPopupOpen()) lyr.openPopup();
             },
             initial: false, minLength: 1,
             inputClasses: 'search-input', buttonClasses: 'search-button',
             tooltipClasses: 'search-tooltip', tipClasses: 'search-tip', alertClasses: 'search-alert'
         });
-        map.addControl(searchControl);
+        map.addControl(searchCtrl);
     }
 
     function createLegend() {
@@ -793,13 +652,10 @@
         addMapControls();
         addMousePositionControl();
         addScaleDenominatorControl();
-        
         setupSidebar();
         createGeoJSONLayers();
         populateLayerList();
-        
         await loadGeojsonData();
-        
         setupSearchControl();
         createLegend();
     });
