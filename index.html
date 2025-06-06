@@ -323,7 +323,10 @@
         },
         attribution: {
             osm: '© OpenStreetMap contributors',
-            esri: '© Esri, Maxar, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AeroGRID, IGN, and the GIS User Community'
+            esri: '© Esri, Maxar, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AeroGRID, IGN, and the GIS User Community',
+            carto: '© OpenStreetMap contributors, © CARTO',
+            opentopomap: 'map data: © OpenStreetMap contributors, SRTM | map style: © OpenTopoMap (CC-BY-SA)',
+            stamen: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> — Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         },
     };
 
@@ -333,23 +336,42 @@
     let allPointFeatures;
     let currentBaseLayer;
 
-    // --- MODIFIED baseLayersConfig for Satellite default ---
     const baseLayersConfig = {
         'Street': {
             layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: config.attribution.osm, maxZoom: 19
             })
-            // No default:true here
         },
         'Satellite': {
             layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                 attribution: config.attribution.esri, maxZoom: 19
             }),
-            default: true // Satellite is now default
+            default: true
+        },
+        'CARTO Positron': {
+            layer: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: config.attribution.carto, maxZoom: 19, subdomains: 'abcd',
+                r: L.Browser.retina ? '@2x' : ''
+            })
+        },
+        'OpenTopoMap': {
+            layer: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                attribution: config.attribution.opentopomap, maxZoom: 17
+            })
+        },
+        'Stamen Toner Lite': {
+            layer: L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.png', {
+                attribution: config.attribution.stamen, subdomains: 'abcd', minZoom: 0, maxZoom: 20,
+                r: L.Browser.retina ? '@2x' : ''
+            })
+        },
+        'Stamen Terrain': {
+            layer: L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}{r}.png', {
+                attribution: config.attribution.stamen, subdomains: 'abcd', minZoom: 0, maxZoom: 18,
+                r: L.Browser.retina ? '@2x' : ''
+            })
         }
     };
-    // --- END OF MODIFIED baseLayersConfig ---
-
 
     const ScaleDen = L.Control.extend({
         options: { position: 'bottomleft' },
@@ -550,7 +572,7 @@
             input.type = 'radio';
             input.name = 'base-map';
             input.id = `base-${name.replace(/\s/g, '-')}`;
-            input.checked = baseLayersConfig[name].default || false;
+            input.checked = baseLayersConfig[name].default || false; // This will check the one with default:true
             input.onchange = () => {
                 if (map.hasLayer(currentBaseLayer)) map.removeLayer(currentBaseLayer);
                 currentBaseLayer = baseLayersConfig[name].layer.addTo(map);
