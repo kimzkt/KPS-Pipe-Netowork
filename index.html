@@ -323,11 +323,8 @@
         },
         attribution: {
             osm: '© OpenStreetMap contributors',
-            esri: '© Esri, Maxar, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AeroGRID, IGN, and the GIS User Community',
-            carto: '© OpenStreetMap contributors, © CARTO',
-            opentopomap: 'map data: © OpenStreetMap contributors, SRTM | map style: © OpenTopoMap (CC-BY-SA)',
-            stamen: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> — Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            // Attribution for Stamen Terrain was here, but Terrain map removed. Generic Stamen attribution kept for Toner Lite.
+            esri: '© Esri, Maxar, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AeroGRID, IGN, and the GIS User Community'
+            // Removed attributions for CARTO, OpenTopoMap, Stamen as they are no longer used
         },
     };
 
@@ -337,7 +334,7 @@
     let allPointFeatures;
     let currentBaseLayer;
 
-    // --- REVERTED baseLayersConfig (Stamen Terrain removed) ---
+    // --- REVERTED baseLayersConfig (CARTO, OpenTopoMap, Stamen Toner Lite removed) ---
     const baseLayersConfig = {
         'Street': {
             layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -349,25 +346,8 @@
                 attribution: config.attribution.esri, maxZoom: 19
             }),
             default: true // Satellite remains default
-        },
-        'CARTO Positron': {
-            layer: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                attribution: config.attribution.carto, maxZoom: 19, subdomains: 'abcd',
-                r: L.Browser.retina ? '@2x' : ''
-            })
-        },
-        'OpenTopoMap': {
-            layer: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-                attribution: config.attribution.opentopomap, maxZoom: 17
-            })
-        },
-        'Stamen Toner Lite': {
-            layer: L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.png', {
-                attribution: config.attribution.stamen, subdomains: 'abcd', minZoom: 0, maxZoom: 20,
-                r: L.Browser.retina ? '@2x' : ''
-            })
         }
-        // Stamen Terrain entry removed from here
+        // CARTO Positron, OpenTopoMap, and Stamen Toner Lite entries removed
     };
     // --- END OF REVERTED baseLayersConfig ---
 
