@@ -327,6 +327,7 @@
             carto: '© OpenStreetMap contributors, © CARTO',
             opentopomap: 'map data: © OpenStreetMap contributors, SRTM | map style: © OpenTopoMap (CC-BY-SA)',
             stamen: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> — Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            // Attribution for Stamen Terrain was here, but Terrain map removed. Generic Stamen attribution kept for Toner Lite.
         },
     };
 
@@ -336,6 +337,7 @@
     let allPointFeatures;
     let currentBaseLayer;
 
+    // --- REVERTED baseLayersConfig (Stamen Terrain removed) ---
     const baseLayersConfig = {
         'Street': {
             layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -346,7 +348,7 @@
             layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                 attribution: config.attribution.esri, maxZoom: 19
             }),
-            default: true
+            default: true // Satellite remains default
         },
         'CARTO Positron': {
             layer: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -364,14 +366,10 @@
                 attribution: config.attribution.stamen, subdomains: 'abcd', minZoom: 0, maxZoom: 20,
                 r: L.Browser.retina ? '@2x' : ''
             })
-        },
-        'Stamen Terrain': {
-            layer: L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}{r}.png', {
-                attribution: config.attribution.stamen, subdomains: 'abcd', minZoom: 0, maxZoom: 18,
-                r: L.Browser.retina ? '@2x' : ''
-            })
         }
+        // Stamen Terrain entry removed from here
     };
+    // --- END OF REVERTED baseLayersConfig ---
 
     const ScaleDen = L.Control.extend({
         options: { position: 'bottomleft' },
@@ -572,7 +570,7 @@
             input.type = 'radio';
             input.name = 'base-map';
             input.id = `base-${name.replace(/\s/g, '-')}`;
-            input.checked = baseLayersConfig[name].default || false; // This will check the one with default:true
+            input.checked = baseLayersConfig[name].default || false;
             input.onchange = () => {
                 if (map.hasLayer(currentBaseLayer)) map.removeLayer(currentBaseLayer);
                 currentBaseLayer = baseLayersConfig[name].layer.addTo(map);
