@@ -323,7 +323,7 @@
         },
         attribution: {
             osm: '© OpenStreetMap contributors',
-            esri: '© Esri, ... GIS User Community'
+            esri: '© Esri, Maxar, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AeroGRID, IGN, and the GIS User Community'
         },
     };
 
@@ -457,7 +457,6 @@
         existingLayer = L.geoJSON(null, { style: config.layerStyles.existingPipe, onEachFeature: (f, l) => l.bindPopup(createPipePopup(f)) });
         newLayer = L.geoJSON(null, { style: config.layerStyles.newPipe, onEachFeature: (f, l) => l.bindPopup(createPipePopup(f)) });
 
-        // --- MODIFIED createPointPopup function ---
         const createPointPopup = (feature, defaultName) => {
             const properties = feature.properties || {};
             let html = `<b>${properties.name || defaultName}</b><hr>`;
@@ -467,10 +466,8 @@
                 html += `<p>${descriptionValue}</p><hr>`;
             }
 
-            // List of keys to EXCLUDE from the popup (case-insensitive for robustness)
             const excludeKeys = [
-                'name',
-                'description', // Already handled if present
+                'name', 'description',
                 'altitude',
                 'alt mode', 'alt_mode', 'altmode',
                 'time begin', 'time_begin', 'timebegin',
@@ -494,17 +491,12 @@
             if (tableContent) {
                 html += `<table>${tableContent}</table>`;
             } else if (!descriptionValue && !(properties.name || defaultName)) {
-                // If popup would be completely empty (no title, no desc, no table props)
                 html = 'No information available.';
             } else if (!tableContent && html.endsWith('<hr>')) {
-                 // If there's a title and/or description, but no table properties, remove trailing <hr>
                  html = html.slice(0, -4);
             }
-
-
             return html;
         };
-        // --- END OF MODIFIED createPointPopup function ---
 
         wsLayer = L.geoJSON(null, { pointToLayer: (f, ll) => L.circleMarker(ll, config.layerStyles.waterSource), onEachFeature: (f, l) => l.bindPopup(createPointPopup(f, 'Unnamed Water Source')) });
         wtpLayer = L.geoJSON(null, { pointToLayer: (f, ll) => L.circleMarker(ll, config.layerStyles.waterTreatmentPlant), onEachFeature: (f, l) => l.bindPopup(createPointPopup(f, 'Unnamed Water Treatment Plant')) });
@@ -516,39 +508,72 @@
         wtpLayer.addTo(map);
     }
 
+    // --- CORRECTED populateLayerList function ---
     function populateLayerList() {
         const overlays = {
-            'បណ្តាញទុយោបច្ចុប្បន្ន': existingLayer, 'បណ្តាញទុយោពង្រីក': newLayer,
-            'ទីតាំងប្រភពទឹក': wsLayer, 'ទីតាំងស្ថានីយទឹកស្អាត': wtpLayer,
+            'បណ្តាញទុយោបច្ចុប្បន្ន': existingLayer,
+            'បណ្តាញទុយោពង្រីក': newLayer,
+            'ទីតាំងប្រភពទឹក': wsLayer,
+            'ទីតាំងស្ថានីយទឹកស្អាត': wtpLayer,
             'ព្រំដែនប្រទេស': countryBoundaryLayer
         };
+
         const layerListDiv = document.getElementById('layer-list');
-        layerListDiv.innerHTML = '';
+        layerListDiv.innerHTML = ''; // Clear previous items if any
+
         Object.keys(overlays).forEach(name => {
-            const div = L.DomUtil.create('div', 'layer-checkbox');
-            const input = L.DomUtil.create('input', '', div);
-            input.type = 'checkbox'; input.checked = map.hasLayer(overlays[name]);
+            const div = document.createElement('div');
+            div.className = 'layer-checkbox';
+
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.checked = map.hasLayer(overlays[name]);
             input.id = `overlay-${name.replace(/\s/g, '-')}`;
-            input.onchange = () => { map[input.checked ? 'addLayer' : 'removeLayer'](overlays[name]); };
-            const label = L.DomUtil.create('label', '', div);
-            label.htmlFor = input.id; label.innerText = name;
+            input.onchange = () => {
+                if (input.checked) {
+                    map.addLayer(overlays[name]);
+                } else {
+                    map.removeLayer(overlays[name]);
+                }
+            };
+
+            const label = document.createElement('label');
+            label.htmlFor = input.id;
+            label.innerText = name;
+
+            div.appendChild(input);
+            div.appendChild(label);
+            layerListDiv.appendChild(div);
         });
+
         const baseMapListDiv = document.getElementById('base-map-list');
         baseMapListDiv.innerHTML = '';
+
         Object.keys(baseLayersConfig).forEach(name => {
-            const div = L.DomUtil.create('div', 'base-map-radio');
-            const input = L.DomUtil.create('input', '', div);
-            input.type = 'radio'; input.name = 'base-map';
+            const div = document.createElement('div');
+            div.className = 'base-map-radio';
+
+            const input = document.createElement('input');
+            input.type = 'radio';
+            input.name = 'base-map';
             input.id = `base-${name.replace(/\s/g, '-')}`;
             input.checked = baseLayersConfig[name].default || false;
             input.onchange = () => {
                 if (map.hasLayer(currentBaseLayer)) map.removeLayer(currentBaseLayer);
                 currentBaseLayer = baseLayersConfig[name].layer.addTo(map);
             };
-            const label = L.DomUtil.create('label', '', div);
-            label.htmlFor = input.id; label.innerText = name;
+
+            const label = document.createElement('label');
+            label.htmlFor = input.id;
+            label.innerText = name;
+
+            div.appendChild(input);
+            div.appendChild(label);
+            baseMapListDiv.appendChild(div);
         });
     }
+    // --- END OF CORRECTED populateLayerList function ---
+
 
     async function loadGeojsonData() {
         showLoadingSpinner();
@@ -654,7 +679,7 @@
         addScaleDenominatorControl();
         setupSidebar();
         createGeoJSONLayers();
-        populateLayerList();
+        populateLayerList(); // Call this to ensure the sidebar is populated
         await loadGeojsonData();
         setupSearchControl();
         createLegend();
