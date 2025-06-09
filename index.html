@@ -10,9 +10,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-search/dist/leaflet-search.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <!-- Leaflet Compass CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet-compass@latest/dist/leaflet-compass.min.css" />
-
 
   <style>
     body { margin:0; padding:0; font-family:"Khmer OS","Noto Sans Khmer",sans-serif; }
@@ -23,280 +21,106 @@
     .leaflet-sidebar-tabs a { width:50px; height:50px; line-height:50px; }
     .leaflet-sidebar-content { padding:8px; font-size:14px; }
     .leaflet-sidebar-header { font-size:16px; margin-bottom:8px; }
-
-    /* Layer and Base Map sections in sidebar */
     .sidebar-section { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
     .sidebar-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
     .sidebar-section-title { font-weight: bold; margin-bottom: 8px; font-size: 15px; color: #333; }
-
     .layer-checkbox, .base-map-radio { margin:4px 0; display: flex; align-items: center; }
     .layer-checkbox input[type="checkbox"],
     .base-map-radio input[type="radio"] { margin-right: 8px; }
-
-    /* Search Control Styles (now directly on map) */
     .leaflet-control-search {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        z-index: 999; /* Ensure search is above most things */
-        background: #fff;
-        border-radius: 4px;
-        box-shadow: 0 1px 5px rgba(0,0,0,0.4);
-        padding: 5px;
-        display: flex;
-        align-items: center;
-        width: 250px; /* Fixed width for the search bar on larger screens */
+        position: absolute; top: 10px; left: 10px; z-index: 999;
+        background: #fff; border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+        padding: 5px; display: flex; align-items: center; width: 250px;
     }
-
     .leaflet-control-search .search-input {
-        flex-grow: 1;
-        border: none;
-        padding: 6px;
-        font-size: 16px;
-        outline: none;
-        border-radius: 4px; /* Keep this if results are not directly attached or if you want standalone rounded input */
+        flex-grow: 1; border: none; padding: 6px; font-size: 16px; outline: none; border-radius: 4px;
     }
-
     .leaflet-control-search .search-button {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 18px;
-        padding: 0 5px;
-        color: #555;
-        outline: none;
+        background: none; border: none; cursor: pointer; font-size: 18px;
+        padding: 0 5px; color: #555; outline: none;
     }
-    .leaflet-control-search .search-button:hover {
-        color: #000;
-    }
-
-    /* NEW: Styles for the search results dropdown */
+    .leaflet-control-search .search-button:hover { color: #000; }
     .leaflet-control-search .search-tooltip {
-        background-color: #ffffff;
-        border: 1px solid #ccc;
-        border-top: none;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-        border-radius: 0 0 4px 4px; /* Rounded bottom corners */
-        max-height: 200px; /* Limit height and add scroll */
-        overflow-y: auto;
-        padding: 0;
-        list-style: none;
-        position: absolute; /* Position it relative to the search control */
-        top: 100%; /* Display below the input */
-        left: 0;
-        right: 0;
-        z-index: 1000; /* Ensure results are above other map elements but below search input if overlapping */
+        background-color: #ffffff; border: 1px solid #ccc; border-top: none;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15); border-radius: 0 0 4px 4px;
+        max-height: 200px; overflow-y: auto; padding: 0; list-style: none;
+        position: absolute; top: 100%; left: 0; right: 0; z-index: 1000;
     }
-
-    /* NEW: Styles for individual search result items */
     .leaflet-control-search .search-tip {
-        display: block;
-        padding: 8px 12px;
-        color: #333;
-        text-decoration: none;
-        font-size: 14px;
-        border-bottom: 1px solid #eee;
-        cursor: pointer;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        display: block; padding: 8px 12px; color: #333; text-decoration: none;
+        font-size: 14px; border-bottom: 1px solid #eee; cursor: pointer;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-
-    .leaflet-control-search .search-tip:last-child {
-        border-bottom: none;
-    }
-
+    .leaflet-control-search .search-tip:last-child { border-bottom: none; }
     .leaflet-control-search .search-tip:hover,
-    .leaflet-control-search .search-tip.selected { /* 'selected' class for keyboard nav highlight */
-        background-color: #f0f0f0;
-        color: #000;
-    }
-
-    /* NEW: Style for "No results found" message */
+    .leaflet-control-search .search-tip.selected { background-color: #f0f0f0; color: #000; }
     .leaflet-control-search .search-alert {
-        padding: 8px 12px;
-        color: #777;
-        font-style: italic;
-        font-size: 14px;
-        text-align: center;
+        padding: 8px 12px; color: #777; font-style: italic; font-size: 14px; text-align: center;
     }
-
-
     .legend { position:absolute; bottom:20px; right:10px; background:#fff; padding:8px; font-size:14px; border-radius:4px; box-shadow:0 0 6px rgba(0,0,0,0.3); width:260px; z-index: 990; }
     .legend-title { font-weight: bold; text-align: center; margin-bottom: 8px; font-size: 16px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px; }
     .legend-item { display:flex; align-items:center; margin-bottom:6px; white-space:nowrap; }
     .legend-item:last-child { margin-bottom:0; }
     .legend i { width:18px; height:18px; margin-right:8px; border:1px solid #000; }
     .legend i.circle { border-radius:50%; }
-
-    /* Scale Denominator Style */
     .leaflet-control-scale-denominator { background:#fff; padding:4px 6px; font-size:12px; border:1px solid rgba(0,0,0,0.2); border-radius:4px; margin-top:4px; }
-
-    /* Loading Spinner Styles */
     #loading-spinner {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 1001;
-        display: none; /* Hidden by default */
-        background: rgba(255, 255, 255, 0.8);
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.2);
-        text-align: center;
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        z-index: 1001; display: none; background: rgba(255, 255, 255, 0.8);
+        padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.2); text-align: center;
     }
     #loading-spinner .spinner {
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #3498db;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        animation: spin 2s linear infinite;
-        margin: 0 auto 10px;
+        border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%;
+        width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 0 auto 10px;
     }
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    /* Popup table styling for better readability */
-    .leaflet-popup-content table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 13px;
-        margin-top: 5px;
-    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .leaflet-popup-content table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 5px; }
     .leaflet-popup-content table th,
-    .leaflet-popup-content table td {
-        padding: 4px 6px;
-        border-bottom: 1px solid #eee;
-        text-align: left;
-    }
-    .leaflet-popup-content table th {
-        font-weight: bold;
-        white-space: nowrap; /* Prevent table headers from wrapping */
-        padding-right: 10px; /* Add some space between header and value */
-    }
+    .leaflet-popup-content table td { padding: 4px 6px; border-bottom: 1px solid #eee; text-align: left; }
+    .leaflet-popup-content table th { font-weight: bold; white-space: nowrap; padding-right: 10px; }
     .leaflet-popup-content table tr:last-child th,
-    .leaflet-popup-content table tr:last-child td {
-        border-bottom: none;
-    }
-    .leaflet-popup-content hr {
-        border: 0;
-        height: 1px;
-        background: #eee;
-        margin: 5px 0;
-    }
-     .leaflet-popup-content p {
-        margin: 5px 0;
-        font-size: 13px;
-    }
-
-
-    .leaflet-control-layers-toggle {
-        display: none !important; /* Hide the default Leaflet layers toggle */
-    }
-
-    /* Style for Mouse Position Control */
+    .leaflet-popup-content table tr:last-child td { border-bottom: none; }
+    .leaflet-popup-content hr { border: 0; height: 1px; background: #eee; margin: 5px 0; }
+    .leaflet-popup-content p { margin: 5px 0; font-size: 13px; }
+    .leaflet-control-layers-toggle { display: none !important; }
     .leaflet-control-mouseposition {
-        background-color: rgba(255, 255, 255, 0.75);
-        padding: 3px 6px;
-        font-size: 12px;
-        border: 1px solid #bbb;
-        border-radius: 4px;
-        box-shadow: 0 1px 5px rgba(0,0,0,0.2);
-        color: #333;
-        margin-top: 4px; /* Consistent margin with other bottom-left controls */
+        background-color: rgba(255, 255, 255, 0.75); padding: 3px 6px; font-size: 12px;
+        border: 1px solid #bbb; border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+        color: #333; margin-top: 4px;
     }
-
-
-    /* Responsive adjustments for smaller screens (e.g., mobile) */
     @media (max-width: 768px) {
         #header { font-size: 18px; padding: 10px; }
         #map { top: 44px; }
-
         .leaflet-sidebar { width: 80vw !important; }
         .leaflet-sidebar.collapsed { width: 50px !important; }
-        .leaflet-sidebar-tabs a { width:50px; height:50px; line-height:50px; }
-
-        .leaflet-control-search {
-            left: 10px;
-            right: 10px;
-            width: auto;
-            max-width: 300px;
-        }
-        .leaflet-control-search .search-input {
-            font-size: 14px;
-        }
-        .leaflet-control-search .search-tooltip {
-            max-height: 150px;
-        }
-        .leaflet-control-search .search-tip {
-            font-size: 13px;
-            padding: 6px 10px;
-        }
-
-        .legend {
-            width: calc(100% - 20px);
-            max-width: 280px;
-            right: 10px;
-            bottom: 10px;
-            font-size: 13px;
-        }
-
-        .leaflet-top.leaflet-right {
-            top: 60px !important;
-            right: 10px !important;
-        }
-        .leaflet-top.leaflet-right .leaflet-control {
-            margin-bottom: 5px;
-        }
-        .leaflet-top.leaflet-right .leaflet-control:last-child {
-            margin-bottom: 0;
-        }
-
+        .leaflet-control-search { left: 10px; right: 10px; width: auto; max-width: 300px; }
+        .leaflet-control-search .search-input { font-size: 14px; }
+        .leaflet-control-search .search-tooltip { max-height: 150px; }
+        .leaflet-control-search .search-tip { font-size: 13px; padding: 6px 10px; }
+        .legend { width: calc(100% - 20px); max-width: 280px; right: 10px; bottom: 10px; font-size: 13px; }
+        .leaflet-top.leaflet-right { top: 60px !important; right: 10px !important; }
+        .leaflet-top.leaflet-right .leaflet-control { margin-bottom: 5px; }
+        .leaflet-top.leaflet-right .leaflet-control:last-child { margin-bottom: 0; }
         .leaflet-bottom.leaflet-left { margin-left: 10px !important; margin-bottom: 10px !important; }
-
-        .leaflet-control-mouseposition {
-            font-size: 11px;
-        }
-        .leaflet-control-scale-denominator {
-            font-size: 11px;
-        }
+        .leaflet-control-mouseposition { font-size: 11px; }
+        .leaflet-control-scale-denominator { font-size: 11px; }
     }
-    .leaflet-control-compass .compass-icon {}
-    .leaflet-control-compass .compass-digit {}
-
   </style>
 </head>
 <body>
   <div id="header">ផែនទីការផ្គត់ផ្គង់ទឹកស្អាតនៅកម្ពុជា ២០២៥–២០៤០</div>
   <div id="sidebar" class="leaflet-sidebar collapsed">
-    <div class="leaflet-sidebar-tabs">
-      <ul role="tablist">
-        <li><a href="#layers" role="tab"><i class="fa fa-list"></i></a></li>
-        </ul>
-    </div>
+    <div class="leaflet-sidebar-tabs"> <ul role="tablist"> <li><a href="#layers" role="tab"><i class="fa fa-list"></i></a></li> </ul> </div>
     <div class="leaflet-sidebar-content">
       <div id="layers" class="leaflet-sidebar-pane">
         <h1 class="leaflet-sidebar-header">ស្រទាប់ និង ផែនទីមូលដ្ឋាន<button class="leaflet-sidebar-close"><i class="fa fa-chevron-right"></i></button></h1>
-        <div class="sidebar-section">
-            <div class="sidebar-section-title">ស្រទាប់</div>
-            <div id="layer-list"></div>
-        </div>
-        <div class="sidebar-section">
-            <div class="sidebar-section-title">ផែនទីមូលដ្ឋាន</div>
-            <div id="base-map-list"></div>
-        </div>
+        <div class="sidebar-section"> <div class="sidebar-section-title">ស្រទាប់</div> <div id="layer-list"></div> </div>
+        <div class="sidebar-section"> <div class="sidebar-section-title">ផែនទីមូលដ្ឋាន</div> <div id="base-map-list"></div> </div>
       </div>
-      </div>
+    </div>
   </div>
   <div id="map"></div>
-  <div id="loading-spinner">
-    <div class="spinner"></div>
-    <div>កំពុងផ្ទុកទិន្នន័យ...</div>
-  </div>
+  <div id="loading-spinner"> <div class="spinner"></div> <div>កំពុងផ្ទុកទិន្នន័យ...</div> </div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-sidebar-v2/js/leaflet-sidebar.min.js"></script>
@@ -307,70 +131,39 @@
 
   <script>
     const config = {
-        mapCenter: [11.4, 104.5],
-        initialZoom: 10,
-        github: {
-            username: 'YOUR_GITHUB_USERNAME', // <<<--- REPLACE
-            repo: 'YOUR_GITHUB_REPO_NAME',   // <<<--- REPLACE
-            branch: 'main'
-        },
+        mapCenter: [11.4, 104.5], initialZoom: 10,
+        github: { username: 'YOUR_GITHUB_USERNAME', repo: 'YOUR_GITHUB_REPO_NAME', branch: 'main' },
         layerStyles: {
-            existingPipe: { color: '#000000', weight: 2 },
-            newPipe: { color: 'white', weight: 2 },
+            existingPipe: { color: '#000000', weight: 2 }, newPipe: { color: 'white', weight: 2 },
             waterSource: { radius: 6, fillColor: '#3498db', color: '#2980b9', fillOpacity: 0.8, weight: 1 },
             waterTreatmentPlant: { radius: 6, fillColor: '#f1c40f', color: '#d4ac0d', fillOpacity: 0.8, weight: 1 },
             countryBoundary: { color: '#ff0000', weight: 2, fillOpacity: 0 }
         },
         attribution: {
             osm: '© OpenStreetMap contributors',
-            esri: '© Esri, Maxar, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AeroGRID, IGN, and the GIS User Community'
-            // Removed attributions for CARTO, OpenTopoMap, Stamen as they are no longer used
+            esri: '© Esri, Maxar, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AeroGRID, IGN, and the GIS User Community',
+            carto: '© OpenStreetMap contributors, © CARTO',
+            opentopomap: 'map data: © OpenStreetMap contributors, SRTM | map style: © OpenTopoMap (CC-BY-SA)',
+            stamen: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> — Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         },
     };
 
-    let map;
-    let sidebar;
-    let existingLayer, newLayer, wsLayer, wtpLayer, countryBoundaryLayer;
-    let allPointFeatures;
-    let currentBaseLayer;
+    let map, sidebar, existingLayer, newLayer, wsLayer, wtpLayer, countryBoundaryLayer, allPointFeatures, currentBaseLayer;
 
-    // --- REVERTED baseLayersConfig (CARTO, OpenTopoMap, Stamen Toner Lite removed) ---
     const baseLayersConfig = {
-        'Street': {
-            layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: config.attribution.osm, maxZoom: 19
-            })
-        },
-        'Satellite': {
-            layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: config.attribution.esri, maxZoom: 19
-            }),
-            default: true // Satellite remains default
-        }
-        // CARTO Positron, OpenTopoMap, and Stamen Toner Lite entries removed
+        'Street': { layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: config.attribution.osm, maxZoom: 19 }) },
+        'Satellite': { layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: config.attribution.esri, maxZoom: 19 }), default: true },
+        'CARTO Positron': { layer: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: config.attribution.carto, maxZoom: 19, subdomains: 'abcd', r: L.Browser.retina ? '@2x' : '' }) },
+        'OpenTopoMap': { layer: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { attribution: config.attribution.opentopomap, maxZoom: 17 }) },
+        'Stamen Toner Lite': { layer: L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.png', { attribution: config.attribution.stamen, subdomains: 'abcd', minZoom: 0, maxZoom: 20, r: L.Browser.retina ? '@2x' : '' }) },
+        'Stamen Terrain': { layer: L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}{r}.png', { attribution: config.attribution.stamen, subdomains: 'abcd', minZoom: 0, maxZoom: 18, r: L.Browser.retina ? '@2x' : '' }) }
     };
-    // --- END OF REVERTED baseLayersConfig ---
 
     const ScaleDen = L.Control.extend({
         options: { position: 'bottomleft' },
-        onAdd: function(mapInstance) {
-            this._div = L.DomUtil.create('div', 'leaflet-control-scale-denominator');
-            this._map = mapInstance;
-            this._map.on('zoomend moveend', this._updateScaleDenominator, this);
-            this._updateScaleDenominator();
-            return this._div;
-        },
-        onRemove: function() {
-            if (this._map) this._map.off('zoomend moveend', this._updateScaleDenominator, this);
-        },
-        _updateScaleDenominator: function() {
-            if (!this._map) return;
-            const lat = this._map.getCenter().lat;
-            const z = this._map.getZoom();
-            const mpp = 156543.0339 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);
-            const scale = mpp * 96 / 0.0254;
-            this._div.innerHTML = 'មាត្រដ្ឋាន៖ 1:' + Math.round(scale).toLocaleString();
-        }
+        onAdd: function(mapInstance) { this._div = L.DomUtil.create('div', 'leaflet-control-scale-denominator'); this._map = mapInstance; this._map.on('zoomend moveend', this._updateScaleDenominator, this); this._updateScaleDenominator(); return this._div; },
+        onRemove: function() { if (this._map) this._map.off('zoomend moveend', this._updateScaleDenominator, this); },
+        _updateScaleDenominator: function() { if (!this._map) return; const lat = this._map.getCenter().lat, z = this._map.getZoom(), mpp = 156543.0339 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z), scale = mpp * 96 / 0.0254; this._div.innerHTML = 'មាត្រដ្ឋាន៖ 1:' + Math.round(scale).toLocaleString(); }
     });
     L.control.scaleDenominator = (opts) => new ScaleDen(opts);
 
@@ -379,264 +172,100 @@
 
     function initializeMap() {
         map = L.map('map', { zoomControl: false }).setView(config.mapCenter, config.initialZoom);
-        for (const key in baseLayersConfig) {
-            if (baseLayersConfig[key].default) {
-                currentBaseLayer = baseLayersConfig[key].layer.addTo(map);
-                break;
-            }
-        }
-        const layersToggle = document.querySelector('.leaflet-control-layers-toggle');
-        if (layersToggle) layersToggle.style.display = 'none';
+        for (const key in baseLayersConfig) { if (baseLayersConfig[key].default) { currentBaseLayer = baseLayersConfig[key].layer.addTo(map); break; } }
+        const lt = document.querySelector('.leaflet-control-layers-toggle'); if (lt) lt.style.display = 'none';
     }
 
     function addMapControls() {
         L.control.zoom({ position: 'topright' }).addTo(map);
         L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
-        L.control.locate({
-            position: 'topright', strings: { title: 'ស្វែងរកទីតាំង​របស់ខ្ញុំ' },
-            drawCircle: true, follow: true, setView: 'untilPan',
-            markerStyle: { fillColor: '#1a73e8', color: '#fff', weight: 2, opacity: 1, fillOpacity: 0.8 },
-            circleStyle: { color: '#1a73e8', fillColor: '#1a73e8', fillOpacity: 0.1, weight: 1 }
-        }).addTo(map);
-        if (L.control.compass) {
-            L.control.compass({
-                position: 'topright', autoActive: true, showDigit: false,
-                textErr: 'Compass N/A', title: 'ទិសដៅ (Compass)'
-            }).addTo(map);
-        } else console.warn("Leaflet Compass plugin not loaded.");
+        L.control.locate({ position: 'topright', strings: { title: 'ស្វែងរកទីតាំង​របស់ខ្ញុំ' }, drawCircle: true, follow: true, setView: 'untilPan', markerStyle: { fillColor: '#1a73e8', color: '#fff', weight: 2, opacity: 1, fillOpacity: 0.8 }, circleStyle: { color: '#1a73e8', fillColor: '#1a73e8', fillOpacity: 0.1, weight: 1 } }).addTo(map);
+        if (L.control.compass) { L.control.compass({ position: 'topright', autoActive: true, showDigit: false, textErr: 'Compass N/A', title: 'ទិសដៅ (Compass)' }).addTo(map); } else console.warn("Leaflet Compass plugin not loaded.");
     }
 
     const MousePosition = L.Control.extend({
         options: { position: 'bottomleft', prefix: "កូអរដោនេ៖ " },
-        onAdd: function (mapInstance) {
-            this._map = mapInstance;
-            this._container = L.DomUtil.create('div', 'leaflet-control-mouseposition');
-            L.DomEvent.disableClickPropagation(this._container);
-            L.DomEvent.disableScrollPropagation(this._container);
-            this._map.on('mousemove', this._onMouseMove, this);
-            this._map.on('mouseout', this._onMouseOut, this);
-            this._container.innerHTML = this.options.prefix + 'N/A';
-            return this._container;
-        },
-        onRemove: function () {
-            if (this._map) {
-                this._map.off('mousemove', this._onMouseMove, this);
-                this._map.off('mouseout', this._onMouseOut, this);
-            }
-        },
-        _onMouseMove: function (e) {
-            this._container.innerHTML = `${this.options.prefix}${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
-        },
+        onAdd: function (mapInstance) { this._map = mapInstance; this._container = L.DomUtil.create('div', 'leaflet-control-mouseposition'); L.DomEvent.disableClickPropagation(this._container); L.DomEvent.disableScrollPropagation(this._container); this._map.on('mousemove', this._onMouseMove, this); this._map.on('mouseout', this._onMouseOut, this); this._container.innerHTML = this.options.prefix + 'N/A'; return this._container; },
+        onRemove: function () { if (this._map) { this._map.off('mousemove', this._onMouseMove, this); this._map.off('mouseout', this._onMouseOut, this); } },
+        _onMouseMove: function (e) { this._container.innerHTML = `${this.options.prefix}${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`; },
         _onMouseOut: function () { this._container.innerHTML = this.options.prefix + 'N/A'; }
     });
     L.control.mousePosition = function(opts) { return new MousePosition(opts); }
 
     function addMousePositionControl() { if (L.control.mousePosition) L.control.mousePosition().addTo(map); }
-    function addScaleDenominatorControl() {
-        if (L.control.scaleDenominator) L.control.scaleDenominator({ position: 'bottomleft' }).addTo(map);
-        else console.error("L.control.scaleDenominator factory not initialized.");
-    }
-
-    function setupSidebar() {
-        sidebar = L.control.sidebar({ container: 'sidebar', autopan: true }).addTo(map);
-        if (window.innerWidth > 768) sidebar.open('layers');
-    }
+    function addScaleDenominatorControl() { if (L.control.scaleDenominator) L.control.scaleDenominator({ position: 'bottomleft' }).addTo(map); else console.error("L.control.scaleDenominator factory not initialized."); }
+    function setupSidebar() { sidebar = L.control.sidebar({ container: 'sidebar', autopan: true }).addTo(map); if (window.innerWidth > 768) sidebar.open('layers'); }
 
     function createGeoJSONLayers() {
         countryBoundaryLayer = L.geoJSON(null, { style: config.layerStyles.countryBoundary, interactive: false });
-
-        const createPipePopup = (feature) => {
-            const props = feature.properties || {};
-            let html = `<b>Pipe Details</b><hr><table>`;
-            if (props.pipe_code) html += `<tr><th>Pipe Code</th><td>${props.pipe_code}</td></tr>`;
-            if (props.diameter !== undefined && props.diameter !== null) html += `<tr><th>Diameter</th><td>${props.diameter} mm</td></tr>`;
-            if (props.length !== undefined && props.length !== null) html += `<tr><th>Length</th><td>${parseFloat(props.length).toFixed(2)} m</td></tr>`;
-            if (props.material) html += `<tr><th>Material</th><td>${props.material}</td></tr>`;
-            if (props.status) html += `<tr><th>Status</th><td>${props.status}</td></tr>`;
-            if (props.installation_year) html += `<tr><th>Installed</th><td>${props.installation_year}</td></tr>`;
-            html += '</table>';
-            return html;
-        };
-
+        const createPipePopup = (f) => { const p = f.properties || {}; let h = `<b>Pipe Details</b><hr><table>`; if (p.pipe_code) h+=`<tr><th>Pipe Code</th><td>${p.pipe_code}</td></tr>`; if (p.diameter !== undefined && p.diameter !== null) h+=`<tr><th>Diameter</th><td>${p.diameter} mm</td></tr>`; if (p.length !== undefined && p.length !== null) h+=`<tr><th>Length</th><td>${parseFloat(p.length).toFixed(2)} m</td></tr>`; if (p.material) h+=`<tr><th>Material</th><td>${p.material}</td></tr>`; if (p.status) h+=`<tr><th>Status</th><td>${p.status}</td></tr>`; if (p.installation_year) h+=`<tr><th>Installed</th><td>${p.installation_year}</td></tr>`; h+='</table>'; return h; };
         existingLayer = L.geoJSON(null, { style: config.layerStyles.existingPipe, onEachFeature: (f, l) => l.bindPopup(createPipePopup(f)) });
         newLayer = L.geoJSON(null, { style: config.layerStyles.newPipe, onEachFeature: (f, l) => l.bindPopup(createPipePopup(f)) });
-
-        const createPointPopup = (feature, defaultName) => {
-            const properties = feature.properties || {};
-            let html = `<b>${properties.name || defaultName}</b><hr>`;
-
-            let descriptionValue = properties.Description || properties.description;
-            if (descriptionValue) {
-                html += `<p>${descriptionValue}</p><hr>`;
-            }
-
-            const excludeKeys = [
-                'name', 'description',
-                'altitude',
-                'alt mode', 'alt_mode', 'altmode',
-                'time begin', 'time_begin', 'timebegin',
-                'time end', 'time_end', 'timeend',
-                'time when', 'time_when', 'timewhen'
-            ];
-
-            let tableContent = '';
-            for (const key in properties) {
-                if (properties.hasOwnProperty(key) &&
-                    !excludeKeys.includes(key.toLowerCase()) &&
-                    typeof properties[key] !== 'object') {
-                    
-                    const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                    const value = properties[key];
-                    const displayValue = (value !== null && value !== undefined) ? value : 'N/A';
-                    tableContent += `<tr><th>${formattedKey}</th><td>${displayValue}</td></tr>`;
-                }
-            }
-
-            if (tableContent) {
-                html += `<table>${tableContent}</table>`;
-            } else if (!descriptionValue && !(properties.name || defaultName)) {
-                html = 'No information available.';
-            } else if (!tableContent && html.endsWith('<hr>')) {
-                 html = html.slice(0, -4);
-            }
-            return html;
-        };
-
+        const createPointPopup = (f, dName) => { const p = f.properties || {}; let h = `<b>${p.name || dName}</b><hr>`; let dVal = p.Description || p.description; if (dVal) h+=`<p>${dVal}</p><hr>`; const exK = ['name','description','altitude','alt mode','alt_mode','altmode','time begin','time_begin','timebegin','time end','time_end','timeend','time when','time_when','timewhen']; let tC = ''; for (const k in p) { if (p.hasOwnProperty(k) && !exK.includes(k.toLowerCase()) && typeof p[k] !== 'object') { const fK = k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()); const v = p[k]; const dV = (v !== null && v !== undefined) ? v : 'N/A'; tC+=`<tr><th>${fK}</th><td>${dV}</td></tr>`; } } if (tC) h+=`<table>${tC}</table>`; else if (!dVal && !(p.name || dName)) h='No information available.'; else if (!tC && h.endsWith('<hr>')) h=h.slice(0,-4); return h; };
         wsLayer = L.geoJSON(null, { pointToLayer: (f, ll) => L.circleMarker(ll, config.layerStyles.waterSource), onEachFeature: (f, l) => l.bindPopup(createPointPopup(f, 'Unnamed Water Source')) });
         wtpLayer = L.geoJSON(null, { pointToLayer: (f, ll) => L.circleMarker(ll, config.layerStyles.waterTreatmentPlant), onEachFeature: (f, l) => l.bindPopup(createPointPopup(f, 'Unnamed Water Treatment Plant')) });
-
-        countryBoundaryLayer.addTo(map);
-        existingLayer.addTo(map);
-        newLayer.addTo(map);
-        wsLayer.addTo(map);
-        wtpLayer.addTo(map);
+        [countryBoundaryLayer, existingLayer, newLayer, wsLayer, wtpLayer].forEach(l => l.addTo(map));
     }
 
     function populateLayerList() {
-        const overlays = {
-            'បណ្តាញទុយោបច្ចុប្បន្ន': existingLayer,
-            'បណ្តាញទុយោពង្រីក': newLayer,
-            'ទីតាំងប្រភពទឹក': wsLayer,
-            'ទីតាំងស្ថានីយទឹកស្អាត': wtpLayer,
-            'ព្រំដែនប្រទេស': countryBoundaryLayer
-        };
-
-        const layerListDiv = document.getElementById('layer-list');
-        layerListDiv.innerHTML = '';
-
-        Object.keys(overlays).forEach(name => {
-            const div = document.createElement('div');
-            div.className = 'layer-checkbox';
-            const input = document.createElement('input');
-            input.type = 'checkbox';
-            input.checked = map.hasLayer(overlays[name]);
-            input.id = `overlay-${name.replace(/\s/g, '-')}`;
-            input.onchange = () => { map[input.checked ? 'addLayer' : 'removeLayer'](overlays[name]); };
-            const label = document.createElement('label');
-            label.htmlFor = input.id;
-            label.innerText = name;
-            div.appendChild(input);
-            div.appendChild(label);
-            layerListDiv.appendChild(div);
-        });
-
-        const baseMapListDiv = document.getElementById('base-map-list');
-        baseMapListDiv.innerHTML = '';
-
-        Object.keys(baseLayersConfig).forEach(name => {
-            const div = document.createElement('div');
-            div.className = 'base-map-radio';
-            const input = document.createElement('input');
-            input.type = 'radio';
-            input.name = 'base-map';
-            input.id = `base-${name.replace(/\s/g, '-')}`;
-            input.checked = baseLayersConfig[name].default || false;
-            input.onchange = () => {
-                if (map.hasLayer(currentBaseLayer)) map.removeLayer(currentBaseLayer);
-                currentBaseLayer = baseLayersConfig[name].layer.addTo(map);
-            };
-            const label = document.createElement('label');
-            label.htmlFor = input.id;
-            label.innerText = name;
-            div.appendChild(input);
-            div.appendChild(label);
-            baseMapListDiv.appendChild(div);
-        });
+        const overlays = { 'បណ្តាញទុយោបច្ចុប្បន្ន': existingLayer, 'បណ្តាញទុយោពង្រីក': newLayer, 'ទីតាំងប្រភពទឹក': wsLayer, 'ទីតាំងស្ថានីយទឹកស្អាត': wtpLayer, 'ព្រំដែនប្រទេស': countryBoundaryLayer };
+        const lld = document.getElementById('layer-list'); lld.innerHTML = '';
+        Object.keys(overlays).forEach(n => { const d = document.createElement('div'); d.className = 'layer-checkbox'; const i = document.createElement('input'); i.type = 'checkbox'; i.checked = map.hasLayer(overlays[n]); i.id = `overlay-${n.replace(/\s/g, '-')}`; i.onchange = () => { map[i.checked?'addLayer':'removeLayer'](overlays[n]); }; const l = document.createElement('label'); l.htmlFor = i.id; l.innerText = n; d.appendChild(i); d.appendChild(l); lld.appendChild(d); });
+        const bmld = document.getElementById('base-map-list'); bmld.innerHTML = '';
+        Object.keys(baseLayersConfig).forEach(n => { const d = document.createElement('div'); d.className = 'base-map-radio'; const i = document.createElement('input'); i.type = 'radio'; i.name = 'base-map'; i.id = `base-${n.replace(/\s/g, '-')}`; i.checked = baseLayersConfig[n].default || false; i.onchange = () => { if (map.hasLayer(currentBaseLayer)) map.removeLayer(currentBaseLayer); currentBaseLayer = baseLayersConfig[n].layer.addTo(map); }; const l = document.createElement('label'); l.htmlFor = i.id; l.innerText = n; d.appendChild(i); d.appendChild(l); bmld.appendChild(d); });
     }
 
     async function loadGeojsonData() {
         showLoadingSpinner();
         const { username, repo, branch } = config.github;
-        let effectiveUser = username, effectiveRepo = repo;
-
-        if (username === 'YOUR_GITHUB_USERNAME' || repo === 'YOUR_GITHUB_REPO_NAME') {
-            try {
-                const urlPathParts = location.pathname.split('/').filter(Boolean);
-                if (location.host.includes('github.io')) {
-                     effectiveUser = location.host.split('.')[0];
-                     effectiveRepo = urlPathParts[0] || `${effectiveUser}.github.io`;
-                } else if (location.protocol === 'file:' && urlPathParts.length >= 3) {
-                    effectiveUser = urlPathParts[urlPathParts.length - 3];
-                    effectiveRepo = urlPathParts[urlPathParts.length - 2];
-                }
-            } catch (e) { console.warn("Could not infer GitHub user/repo.", e); }
-        }
-
-        if (effectiveUser === 'YOUR_GITHUB_USERNAME' || effectiveRepo === 'YOUR_GITHUB_REPO_NAME') {
-            console.error("CRITICAL: GitHub username/repo placeholder. Update 'config.github'.");
-            alert("Config Error: GitHub user/repo not set."); hideLoadingSpinner(); return;
-        }
-        console.info(`Loading data from GitHub: ${effectiveUser}/${effectiveRepo}/${branch}`);
-
+        let effU = username, effR = repo;
+        if (username === 'YOUR_GITHUB_USERNAME' || repo === 'YOUR_GITHUB_REPO_NAME') { try { const up = location.pathname.split('/').filter(Boolean); if (location.host.includes('github.io')) { effU = location.host.split('.')[0]; effR = up[0] || `${effU}.github.io`; } else if (location.protocol === 'file:' && up.length >= 3) { effU = up[up.length-3]; effR = up[up.length-2]; } } catch (e) { console.warn("Could not infer GitHub user/repo.", e); } }
+        if (effU === 'YOUR_GITHUB_USERNAME' || effR === 'YOUR_GITHUB_REPO_NAME') { console.error("CRITICAL: GitHub placeholder. Update 'config.github'."); alert("Config Error: GitHub user/repo not set."); hideLoadingSpinner(); return; }
+        console.info(`Loading from GitHub: ${effU}/${effR}/${branch}`);
         try {
-            const res = await fetch(`https://api.github.com/repos/${effectiveUser}/${effectiveRepo}/contents?ref=${branch}`);
-            if (!res.ok) throw new Error(`GitHub API HTTP error! ${res.status} - ${res.statusText}`);
-            const files = await res.json();
-            const geojsonFiles = files.filter(f => f.type === 'file' && /\.(geojson|json)$/i.test(f.name));
-
-            if (!geojsonFiles.length) { console.warn("No GeoJSON files found."); hideLoadingSpinner(); return; }
-
-            let featuresLoaded = 0;
-            for (const file of geojsonFiles) {
-                const dataRes = await fetch(file.download_url);
-                if (!dataRes.ok) { console.warn(`Failed to load ${file.name}: ${dataRes.statusText}`); continue; }
-                const data = await dataRes.json();
-                const features = data.features && Array.isArray(data.features) ? data.features : Array.isArray(data) ? data : [];
-
-                features.forEach(feat => {
-                    featuresLoaded++;
-                    const geomType = feat.geometry && feat.geometry.type;
-                    const props = feat.properties || {};
-                    if (geomType && /LineString|MultiLineString/.test(geomType)) {
-                        (props.diameter !== undefined && props.diameter !== null) ? existingLayer.addData(feat) : newLayer.addData(feat);
-                    } else if (geomType === 'Point') {
-                        const nameUpper = (props.name || '').toUpperCase();
-                        if (nameUpper.includes('WS')) wsLayer.addData(feat);
-                        else if (nameUpper.includes('WTP')) wtpLayer.addData(feat);
-                        else console.warn("Unclassified Point:", feat);
-                    } else if (geomType && /Polygon|MultiPolygon/.test(geomType)) {
-                        countryBoundaryLayer.addData(feat);
-                    }
+            const r = await fetch(`https://api.github.com/repos/${effU}/${effR}/contents?ref=${branch}`);
+            if (!r.ok) throw new Error(`GitHub API HTTP error! ${r.status} - ${r.statusText}`);
+            const files = await r.json();
+            const gFiles = files.filter(f => f.type === 'file' && /\.(geojson|json)$/i.test(f.name));
+            if (!gFiles.length) { console.warn("No GeoJSON files."); hideLoadingSpinner(); return; }
+            let fLoaded = 0;
+            for (const file of gFiles) {
+                const dR = await fetch(file.download_url);
+                if (!dR.ok) { console.warn(`Failed to load ${file.name}: ${dR.statusText}`); continue; }
+                const data = await dR.json();
+                const feats = data.features && Array.isArray(data.features) ? data.features : Array.isArray(data) ? data : [];
+                feats.forEach(feat => {
+                    fLoaded++;
+                    const gT = feat.geometry && feat.geometry.type;
+                    const p = feat.properties || {};
+                    if (gT && /LineString|MultiLineString/.test(gT)) { (p.diameter !== undefined && p.diameter !== null) ? existingLayer.addData(feat) : newLayer.addData(feat); }
+                    else if (gT === 'Point') {
+                        const nU = (p.name || '').toUpperCase();
+                        let tL = null;
+                        if (nU.includes('WS')) tL = wsLayer; else if (nU.includes('WTP')) tL = wtpLayer;
+                        if (tL) {
+                            const nameVal = p.name || '';
+                            const folderVal = p.Folders || p.folders || ''; // Check for 'Folders' or 'folders'
+                            feat.properties.search_text = `${nameVal} ${folderVal}`.trim();
+                            tL.addData(feat);
+                        } else console.warn("Unclassified Point:", feat);
+                    } else if (gT && /Polygon|MultiPolygon/.test(gT)) { countryBoundaryLayer.addData(feat); }
                 });
             }
-            console.log(`Total features processed: ${featuresLoaded}`);
-            if(!featuresLoaded && geojsonFiles.length) console.warn("Files found, but no features loaded.");
-        } catch (err) {
-            console.error("Error loading GeoJSON:", err);
-            alert(`Failed to load map data: ${err.message}`);
-        } finally { hideLoadingSpinner(); }
+            console.log(`Features processed: ${fLoaded}`);
+            if(!fLoaded && gFiles.length) console.warn("Files found, no features loaded.");
+        } catch (err) { console.error("Error loading GeoJSON:", err); alert(`Failed to load map data: ${err.message}`); }
+        finally { hideLoadingSpinner(); }
     }
 
     function setupSearchControl() {
         if (!wsLayer || !wtpLayer) { console.error("Point layers not init for search."); return; }
         allPointFeatures = L.featureGroup([wsLayer, wtpLayer]);
         const searchCtrl = new L.Control.Search({
-            layer: allPointFeatures, propertyName: 'name', collapsed: false,
-            textPlaceholder: 'ស្វែងរក...', marker: false, zoom: 15,
-            moveToLocation: (ll, title, lyr) => {
-                map.setView(ll, searchCtrl.options.zoom || 15);
-                if (lyr && lyr.getPopup && typeof lyr.isPopupOpen === 'function' && !lyr.isPopupOpen()) lyr.openPopup();
-            },
+            layer: allPointFeatures, propertyName: 'search_text', // Use combined field
+            textPlaceholder: 'ស្វែងរកតាមឈ្មោះ ឬទីតាំង...', // Updated placeholder
+            collapsed: false, marker: false, zoom: 15,
+            moveToLocation: (ll, title, lyr) => { map.setView(ll, searchCtrl.options.zoom || 15); if (lyr && lyr.getPopup && typeof lyr.isPopupOpen === 'function' && !lyr.isPopupOpen()) lyr.openPopup(); },
             initial: false, minLength: 1,
             inputClasses: 'search-input', buttonClasses: 'search-button',
             tooltipClasses: 'search-tooltip', tipClasses: 'search-tip', alertClasses: 'search-alert'
@@ -646,32 +275,15 @@
 
     function createLegend() {
         const legend = L.control({ position: 'bottomright' });
-        legend.onAdd = () => {
-            const div = L.DomUtil.create('div', 'legend');
-            div.innerHTML = `
-                <div class="legend-title">កំណត់សម្គាល់</div>
-                <div class="legend-item"><i style="background:${config.layerStyles.existingPipe.color};"></i> បណ្តាញទុយោបច្ចុប្បន្ន</div>
-                <div class="legend-item"><i style="background:${config.layerStyles.newPipe.color}; border:1px solid black;"></i> បណ្តាញទុយោពង្រីក</div>
-                <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterSource.fillColor}; border-color:${config.layerStyles.waterSource.color};"></i> ទីតាំងប្រភពទឹក</div>
-                <div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterTreatmentPlant.fillColor}; border-color:${config.layerStyles.waterTreatmentPlant.color};"></i> ទីតាំងស្ថានីយទឹកស្អាត</div>
-                <div class="legend-item"><i style="background:transparent; border:2px solid ${config.layerStyles.countryBoundary.color};"></i> ព្រំដែនប្រទេស</div>
-            `;
-            return div;
-        };
+        legend.onAdd = () => { const d = L.DomUtil.create('div', 'legend'); d.innerHTML = `<div class="legend-title">កំណត់សម្គាល់</div><div class="legend-item"><i style="background:${config.layerStyles.existingPipe.color};"></i> បណ្តាញទុយោបច្ចុប្បន្ន</div><div class="legend-item"><i style="background:${config.layerStyles.newPipe.color}; border:1px solid black;"></i> បណ្តាញទុយោពង្រីក</div><div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterSource.fillColor}; border-color:${config.layerStyles.waterSource.color};"></i> ទីតាំងប្រភពទឹក</div><div class="legend-item"><i class="circle" style="background:${config.layerStyles.waterTreatmentPlant.fillColor}; border-color:${config.layerStyles.waterTreatmentPlant.color};"></i> ទីតាំងស្ថានីយទឹកស្អាត</div><div class="legend-item"><i style="background:transparent; border:2px solid ${config.layerStyles.countryBoundary.color};"></i> ព្រំដែនប្រទេស</div>`; return d; };
         legend.addTo(map);
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        initializeMap();
-        addMapControls();
-        addMousePositionControl();
-        addScaleDenominatorControl();
-        setupSidebar();
-        createGeoJSONLayers();
-        populateLayerList();
+        initializeMap(); addMapControls(); addMousePositionControl(); addScaleDenominatorControl();
+        setupSidebar(); createGeoJSONLayers(); populateLayerList();
         await loadGeojsonData();
-        setupSearchControl();
-        createLegend();
+        setupSearchControl(); createLegend();
     });
   </script>
 </body>
